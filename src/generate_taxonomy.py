@@ -17,8 +17,12 @@ def read_params(args):
          help="The nodes.dmp from the NCBI taxonomy")
     arg( '--names', metavar='names', required = True, type=str,
          help="The names.dmp from the NCBI taxonomy")
+    arg( '--prokaryotes', metavar='prokaryotes', required = True, type=str, 
+         help="The prokaryotes NCBI file \"prokaryotes.txt\"")
     arg( '--catalog', metavar='catalog', required = True, type=str, 
          help="The catalog RefSeq file \"RefSeq-releaseXX.catalog\"")
+    arg( '--scaffs_in_complete', metavar='scaffs_in_complete', required = True, type=str, 
+         help="The scaffolds entries for draft genomes included in the \"complete\" files")
     arg( '--output', metavar='out', default = None, type = str, 
          help="The output taxonomy")
     arg( '--output_red', metavar='out_red', default = None, type = str, 
@@ -133,12 +137,13 @@ class Nodes:
                 tax = "|".join([red_rank(p.rank)+'__'+p.name for p in tree.get_path( t )])
                 outf.write("\t".join( [ t.name,
                                         t.accession['status'],
-                                        t.accession['gi'],
+                                        ",".join(t.accession['gen_seqs']),
                                         str(t.tax_id),
-                                        t.accession['code'],
-                                        t.accession['accession'],
-                                        str(t.accession['len']),
-                                        tax]    )+"\n")
+                                        #t.accession['code'],
+                                        #",".join(t.accession['accession']),
+                                        #str(t.accession['len']),
+                                        tax
+                                        ]    )+"\n")
         
     
     def get_tree_with_reduced_taxonomy( self, superkingdom = "Bacteria" ):
@@ -294,44 +299,102 @@ class Accessions:
     #
     # EXTRACTING FOR NOW: NC and NZ
 
-    def __init__( self, names_dmp_file ):
+    def __init__( self, prokaryotes, scaffs_in_complete, names_dmp_file ):
         self.accessions = {}
+
+        scafs = dict([(l[0][3:7],l[1].strip().split(',')) for l in (
+                        line.split('\t') for line in open(scaffs_in_complete))])
+
+        acc_ok = set() 
+        with open( names_dmp_file ) as inpf:
+            for line in (l.strip().split('\t') for l in inpf):
+                code = line[2].split("_")[0]
+                if 'plasmid' in line[4] or "mitochondrion" in line[4] or 'plastid' in line[4]:
+                    continue
+                if code == "NC":
+                    acc_ok.add( line[2] )
+                if code == "NZ":
+                    acc_ok.add( line[2].split("_")[1][:4] ) 
+
+        with open( prokaryotes ) as inpf:
+            for line in (l.strip().split('\t') for l in inpf):
+                if line[0][0] == '#':
+                    continue
+                if line[19] == "No data":
+                    continue
+                if line[8] == '-' and line[12] == '-':
+                    continue
+                
+                name = line[0]
+                taxid = int(line[1])
+                status = "final" if line[12] == '-' else "draft"
+                
+                if status == "final":
+                    gen_seqs_tmp = line[8].split(",")
+                    gen_seqs = list(set([gs for gs in gen_seqs_tmp if gs in acc_ok]))
+                else:
+                    if line[12][:4] in scafs:
+                        if line[12][:4] in acc_ok:
+                            gen_seqs = scafs[line[12][:4]]
+                        else:
+                            gen_seqs = []
+                    else:
+                        gen_seqs_tmp = [l[:4] for l in line[12].split(",")]
+                        gen_seqs = list(set([gs for gs in gen_seqs_tmp if gs in acc_ok]))
+
+
+                if not gen_seqs:
+                    #print gen_seqs_tmp
+                    continue
+
+                self.accessions[taxid] = { 'name' : name,
+                                           'status' : status,
+                                           'gen_seqs' : gen_seqs }
+
+        """
         with open( names_dmp_file ) as inpf:
             for line in (l.strip().split('\t') for l in inpf):
                 code = line[2].split("_")[0]
                 if code == "NC":
-                    if 'plasmid' in line[4] or "mitochondrion" in line[4]:
+                    if 'plasmid' in line[4] or "mitochondrion" in line[4] or 'plastid' in line[4]:
                         continue
-                    self.accessions[int(line[0])] = { 'name': line[1],
-                                                      'accession': line[2],
-                                                      'gi': line[3],
-                                                      'refseq_dir': line[4],
-                                                      'refseq_status': line[5],
-                                                      'len': line[6],
-                                                      'code': code,
-                                                      'status': "final"}
+                    acc = int(line[0])
+                    if acc in self.accessions:
+                        self.accessions[int(line[0])]['accession'].append( line[2] )
+                        self.accessions[int(line[0])]['gi'].append( line[3] )
+                        self.accessions[int(line[0])]['len'].append( line[6] )
+                    else:
+                        self.accessions[int(line[0])] = { 'name': line[1],
+                                                          'accession': [line[2]],
+                                                          'gi': [line[3]],
+                                                          'refseq_dir': line[4],
+                                                          'refseq_status': line[5],
+                                                          'len': [line[6]],
+                                                          'code': code,
+                                                          'status': "final"}
                 if code == "NZ":
                     if 'plasmid' in line[4] or "mitochondrion" in line[4]:
                         continue
                     if '00000000' not in line[2]:
                         continue
                     self.accessions[int(line[0])] = { 'name': line[1],
-                                                      'accession': line[2],
-                                                      'gi': line[3],
+                                                      'accession': [line[2]],
+                                                      'gi': [line[3]],
                                                       'refseq_dir': line[4],
                                                       'refseq_status': line[5],
                                                       'len': line[6],
                                                       'code': code,
                                                       'status': "draft"}
-               
+    
+        """
     def get_accessions( self ):
         return self.accessions
-
+    
 
 if __name__ == '__main__':
     par = read_params(sys.argv)
 
-    accessions = Accessions( par['catalog'] )
+    accessions = Accessions( par['prokaryotes'], par['scaffs_in_complete'], par['catalog'] )
     names = Names( par['names'] )
     tax_tree = Nodes( par['nodes'], names.get_tax_ids_to_names(), accessions.get_accessions() ) 
     tax_tree.add_internal_accessions()
