@@ -9,7 +9,7 @@ os.chdir(newpath)
 taxdump = 'taxdump.tar.gz'
 refseq = 'RefSeq-release59.catalog.gz'
 urllib.urlretrieve('ftp://ftp.ncbi.nih.gov/pub/taxonomy/'+taxdump, taxdump)
-print "Downloaded taxdump"
+print "Downloaded",taxdump
 urllib.urlretrieve(' ftp://ftp.ncbi.nlm.nih.gov/refseq/release/release-catalog/'+refseq, refseq)
 print "Downloaded RefSeq catalog"
 textfiles = ['prokaryotes.txt', 'eukaryotes.txt', 'viruses.txt']
