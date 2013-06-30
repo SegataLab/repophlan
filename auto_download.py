@@ -24,8 +24,18 @@ if tarfile.is_tarfile(taxdump):
     tfile.extractall('.')
 else:
     print taxdump + " is not a tarfile."
+    
+bashCommand = "gunzip "+refseq
+import subprocess
+process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+output = process.communicate()[0]    
+
+print "Unzipped refseq catalog"    
+
 delfiles = ['taxdump.tar.gz','delnodes.dmp','merged.dmp','gencode.dmp','gc.prt','division.dmp','citations.dmp']
 for df in delfiles:
   os.remove(df)
+
+print "Deleted extra files"
   
 
