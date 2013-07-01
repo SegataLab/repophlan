@@ -5,12 +5,12 @@ import subprocess
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--rsversion", help="Version of RefSeq catalog to download")
-parser.add_argument("--prok_file", help="Prokaryotes file")
-parser.add_argument("--euk_file", help="Eukaryotes file")
-parser.add_argument("--vir_file", help="Viruses file")
-parser.add_argument("--ncbi_nodes", help="NCBI nodes file")
-parser.add_argument("--ncbi_names", help="NCBI names file")
+parser.add_argument("--rsversion", help="Version of RefSeq catalog to download", default='00')
+parser.add_argument("--prok_file", help="Prokaryotes file", default="prokaryotes.txt")
+parser.add_argument("--euk_file", help="Eukaryotes file", default="eukaryotes.txt")
+parser.add_argument("--vir_file", help="Viruses file", default="viruses.txt")
+parser.add_argument("--ncbi_nodes", help="NCBI nodes file", default="nodes.txt")
+parser.add_argument("--ncbi_names", help="NCBI names file", default="names.txt")
 args = parser.parse_args()
 
 newpath = r'Big6' 
