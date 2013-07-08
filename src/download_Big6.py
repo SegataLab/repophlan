@@ -8,12 +8,14 @@ import csv
 
 def parseArgs():
 	parser = argparse.ArgumentParser()
+	parser.add_argument("--settings", help="Settings file name", default='settings.txt')
 	parser.add_argument("--rsversion", help="Version of RefSeq catalog to download", default='00')
 	parser.add_argument("--prok_file", help="Prokaryotes file name", default="prokaryotes.txt")
 	parser.add_argument("--euk_file", help="Eukaryotes file name", default="eukaryotes.txt")
 	parser.add_argument("--vir_file", help="Viruses file name", default="viruses.txt")
 	parser.add_argument("--ncbi_nodes", help="NCBI nodes file name", default="nodes.txt")
 	parser.add_argument("--ncbi_names", help="NCBI names file name", default="names.txt")
+	parser.add_argument("--logfile", help="Log file name", default='log.txt')
 	args = parser.parse_args()
 	return args
 
@@ -33,6 +35,8 @@ def makeNewDirectory(newpath):
 args = parseArgs()
 makeNewDirectory(r'Big6')
 settings = readSettings()
+f = open(args.logfile,'w')
+f.write('This is a test\n')
 
 #Download all files
 taxdumpurl = settings[0][1]
@@ -45,24 +49,31 @@ euk_file = settings[6][1]
 vir_file = settings[7][1]
 delfiles = settings[8][1:]
 
-urllib.urlretrieve(taxdumpurl+taxdump, taxdump)
-print "Downloaded",taxdump
+try:
+	os.system('wget '+taxdumpurl+taxdump)
+	print "Downloaded",taxdump
+except:
+	print "Error downloading",taxdump
 
 refseq = rf+args.rsversion+'.catalog'
 refseqgz = refseq+'.gz'
 if not os.path.isfile(refseq):
-  try: 
-    urllib.urlretrieve(refsequrl+refseqgz, refseqgz)
-    print "Downloaded latest version of RefSeq catalog"
+  try:
+	os.system('wget '+refsequrl+refseqgz)
+    	print "Downloaded latest version of RefSeq catalog"
   except:
-    print "Specified version of RefSeq NOT downloaded. Please specify latest RefSeq catalog version."
+    	print "Error downloading specified version of RefSeq catalog. Please ensure you specify latest RefSeq catalog version."
 else:
-  print "Latest version of RefSeq catalog already on file"
+	print "Latest version of RefSeq catalog already on file"
 
 tfs = [[prok_file,args.prok_file],[euk_file,args.euk_file], [vir_file,args.vir_file]]
 for tf in tfs:
-  urllib.urlretrieve(textfilesurl+tf[0], tf[1])
-  print "Downloaded",tf[0],"and saved to local file",tf[1]
+	try:
+		os.system('wget '+textfilesurl+tf[0])
+		os.rename(tf[0],tf[1])
+  		print "Downloaded",tf[0],"and saved to local file",tf[1]
+	except:
+		print "Error downloading",tf[0]
   
 #Untar/gunzip
 tfile = tarfile.open(taxdump)
