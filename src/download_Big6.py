@@ -21,7 +21,7 @@ def parseArgs():
 
 def readSettings():
 	settings = []
-	with open("../settings.txt") as tsv:
+	with open("settings.txt") as tsv:
 		for line in csv.reader(tsv,dialect="excel-tab"):
 			settings.append(line)
 	return settings
@@ -30,13 +30,12 @@ def readSettings():
 def makeNewDirectory(newpath): 
 	if not os.path.exists(newpath): 
   		os.makedirs(newpath)
-	os.chdir(newpath)
 
 args = parseArgs()
 makeNewDirectory(r'Big6')
 settings = readSettings()
-f = open(args.logfile,'w')
-f.write('This is a test\n')
+f = open('Big6/'+args.logfile,'w')
+f.write('Log file for download_Big6.py:\n')
 
 #Download all files
 taxdumpurl = settings[0][1]
@@ -50,47 +49,47 @@ vir_file = settings[7][1]
 delfiles = settings[8][1:]
 
 try:
-	os.system('wget '+taxdumpurl+taxdump)
-	print "Downloaded",taxdump
+	os.system('wget -P Big6/'+taxdump+' '+taxdumpurl+taxdump)
+	f.write("Downloaded",taxdump)
 except:
-	print "Error downloading",taxdump
+	f.write("Error downloading "+taxdump)
 
 refseq = rf+args.rsversion+'.catalog'
 refseqgz = refseq+'.gz'
 if not os.path.isfile(refseq):
   try:
-	os.system('wget '+refsequrl+refseqgz)
-    	print "Downloaded latest version of RefSeq catalog"
+	os.system('wget -P Big6/'+refseqgz+' '+refsequrl+refseqgz)
+    	f.write("Downloaded latest version of RefSeq catalog")
   except:
-    	print "Error downloading specified version of RefSeq catalog. Please ensure you specify latest RefSeq catalog version."
+    	f.write("Error downloading specified version of RefSeq catalog. Please ensure you specify latest RefSeq catalog version.")
 else:
-	print "Latest version of RefSeq catalog already on file"
+	f.write("Latest version of RefSeq catalog already on file")
 
 tfs = [[prok_file,args.prok_file],[euk_file,args.euk_file], [vir_file,args.vir_file]]
 for tf in tfs:
 	try:
-		os.system('wget '+textfilesurl+tf[0])
-		os.rename(tf[0],tf[1])
-  		print "Downloaded",tf[0],"and saved to local file",tf[1]
+		os.system('wget -P Big6/'+tf[1]+' '+textfilesurl+tf[0])
+  		f.write("Downloaded "+tf[0]+" and saved to local file "+tf[1])
 	except:
-		print "Error downloading",tf[0]
+		f.write("Error downloading "+tf[0])
   
 #Untar/gunzip
+os.chmod('Big6')
 tfile = tarfile.open(taxdump)
 if tarfile.is_tarfile(taxdump):
   # extract all contents
   tfile.extractall('.')
 else:
-  print taxdump + " is not a tarfile."
+  f.write(taxdump + " is not a tarfile.")
     
 bashCommand = "gunzip "+refseqgz
 process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
 output = process.communicate()[0]    
-print "Unzipped refseq catalog"    
+f.write("Unzipped refseq catalog")    
 
 for df in delfiles:
   os.remove(df)
 os.rename('names.dmp',args.ncbi_names)
 os.rename('nodes.dmp',args.ncbi_nodes)
 
-print "Deleted extra files"
+f.write("Deleted extra files")
