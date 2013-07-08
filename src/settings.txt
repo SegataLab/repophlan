@@ -1,0 +1,10 @@
+taxdumpurl	ftp://ftp.ncbi.nih.gov/pub/taxonomy/
+taxdump	taxdump.tar.gz
+refsequrl	ftp://ftp.ncbi.nlm.nih.gov/refseq/release/release-catalog/
+refseq	RefSeq-release
+txtfilesurl	ftp://ftp.ncbi.nlm.nih.gov/genomes/GENOME_REPORTS/
+prok_file	prokaryotes.txt
+euk_file	eukaryotes.txt
+vir_file	viruses.txt
+delete_files	taxdump.tar.gz	delnodes.dmp	merged.dmp	gencode.dmp	gc.prt	division.dmp	citations.dmp
+
