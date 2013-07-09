@@ -35,8 +35,10 @@ def makeNewDirectory(newpath):
 
 def download(url,logfile):
 	try:
-        	os.system('wget -q -N '+url)
-        	f.write("Downloaded file from "+url+"\n")
+		bashCommand = 'wget -q -N '+url
+                process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+		output = process.communicate()[0]
+		f.write("Downloaded file from "+url+"\n")
 	except:
         	f.write("Error downloading file from "+url+"\n")
 

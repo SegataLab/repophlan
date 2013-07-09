@@ -6,5 +6,5 @@ txtfilesurl	ftp://ftp.ncbi.nlm.nih.gov/genomes/GENOME_REPORTS/
 prok_file	prokaryotes.txt
 euk_file	eukaryotes.txt
 vir_file	viruses.txt
-delete_files	taxdump.tar.gz	delnodes.dmp	merged.dmp	gencode.dmp	gc.prt	division.dmp	citations.dmp readme.txt
+delete_files	delnodes.dmp	merged.dmp	gencode.dmp	gc.prt	division.dmp	citations.dmp	readme.txt
 
