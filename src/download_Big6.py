@@ -1,3 +1,18 @@
+# ==============================================================================
+# download_Big6.py
+#
+# Authors: Roman Stolyarov (r.m.stolyarov@gmail.com)
+#
+# Downloads latest versions of prokaryotes.txt, eukaryotes.txt, and viruses.txt from NCBI.
+# Downloads specified version of refseq catalog (if it is latest).
+# Downloads latest taxdump.tar.gz. Extracts names.dmp and nodes.dmp.
+# ==============================================================================
+
+__author__ = 'Roman Stolyarov (r.m.stolyarov@gmail.com)'
+__version__ = '1.1.1'
+__date__ = '9 July 2013'
+
+
 import urllib 
 import tarfile
 import os
