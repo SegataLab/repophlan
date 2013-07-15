@@ -1,3 +1,17 @@
+# ==============================================================================
+# download_refseq.py
+
+#
+# Authors: Roman Stolyarov (r.m.stolyarov@gmail.com)
+#
+# Downloads all complete and draft genomes from Refseq, along with DNA annotation information.
+# ==============================================================================
+__author__ = 'Roman Stolyarov (r.m.stolyarov@gmail.com)'
+__version__ = '1.1.1'
+__date__ = '9 July 2013'
+
+
+
 import urllib
 import subprocess
 from ftplib import FTP
