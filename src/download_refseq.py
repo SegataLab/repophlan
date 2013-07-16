@@ -5,20 +5,22 @@ import csv
 import os
 
 def readSettings():
-        settings = []
-        with open("settings.txt") as tsv:
-                for line in csv.reader(tsv,dialect="excel-tab"):
-                        settings.append(line)
-        return settings
+	settings = {}
+	f = open("settings.txt")
+	data = f.readlines()
+	for line in data:
+		key, value = line.split("\t")
+		settings[key] = value.split()
+	return settings
 
 #Parse settings file, set relevant variables
 settings = readSettings()
-refseqdbftp = settings[9][1]
-refseqdbpath = settings[10][1]
-refseqdbloc = settings[11][1]
+refseqdbftp = settings['refseqdbftp'][0]
+refseqdbpath = settings['refseqdbpath'][0]
+refseqdbloc = settings['refseqdbloc'][0]
 refseqdburl = 'ftp://'+refseqdbftp+'/'+refseqdbpath
 
-#Access the FTP, download files with names ending in genomic.fna.gz or genomic.gbff.gz
+#Access the FTP, download files with names *.genomic.fna.gz or *.genomic.gbff.gz or *.mstr.gbff.gz
 ftp = FTP(refseqdbftp)
 ftp.login()
 ftp.cwd(refseqdbpath)
@@ -27,7 +29,7 @@ ftp.dir(all_files.append)
 print 'Got list of files'
 for file in all_files:
 	fn = file.split()[-1]
-	if fn[:12] == 'complete.100' and (fn[-14:] == 'genomic.fna.gz' or fn[-15:] == 'genomic.gbff.gz'):
+	if fn[:8] == 'complete' and (fn[-14:] == 'genomic.fna.gz' or fn[-15:] == 'genomic.gbff.gz' or fn[-12] == 'mstr.gbff.gz'):
 		print 'Downloading',fn,'....'
 		try:
   			bashCommand = 'wget -N -P '+refseqdbloc+' '+refseqdburl+fn
