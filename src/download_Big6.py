@@ -36,10 +36,12 @@ def parseArgs():
 	return args
 
 def readSettings():
-	settings = []
-	with open("settings.txt") as tsv:
-		for line in csv.reader(tsv,dialect="excel-tab"):
-			settings.append(line)
+	settings = {}
+	f = open("settings.txt")
+	data = f.readlines()
+	for line in data:
+    		key, value = line.split("\t")
+    		settings[key] = value.split()
 	return settings
 
 
@@ -64,15 +66,15 @@ f = open(args.logfile,'a')
 f.write(time.strftime("\nRun of download_Big6 on %Y-%m-%d %H:%M:%S\n", time.gmtime()))
 
 #Initialize settings variables
-taxdumpurl = settings[0][1]
-taxdump = settings[1][1]
-refsequrl = settings[2][1]
-rf = settings[3][1]
-textfilesurl = settings[4][1]
-prok_file = settings[5][1]
-euk_file = settings[6][1]
-vir_file = settings[7][1]
-delfiles = settings[8][1:]
+taxdumpurl = settings['taxdumpurl'][0]
+taxdump = settings['taxdump'][0]
+refsequrl = settings['refsequrl'][0]
+rf = settings['refseq'][0]
+textfilesurl = settings['textfilesurl'][0]
+prok_file = settings['prok_file'][0]
+euk_file = settings['euk_file'][0]
+vir_file = settings['vir_file'][0]
+delfiles = settings['delete_files']
 
 download(taxdumpurl+taxdump,args.logfile)
 
