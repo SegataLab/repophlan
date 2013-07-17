@@ -19,6 +19,10 @@ def read_params(args):
          help="The names.dmp from the NCBI taxonomy")
     arg( '--prokaryotes', metavar='prokaryotes', required = True, type=str, 
          help="The prokaryotes NCBI file \"prokaryotes.txt\"")
+    arg( '--eukaryotes', metavar='eukaryotes', required = True, type=str, 
+         help="The eukaryotes NCBI file \"eukaryotes.txt\"")
+    arg( '--viruses', metavar='viruses', required = True, type=str, 
+         help="The viruses NCBI file \"viruses.txt\"")
     arg( '--catalog', metavar='catalog', required = True, type=str, 
          help="The catalog RefSeq file \"RefSeq-releaseXX.catalog\"")
     arg( '--scaffs_in_complete', metavar='scaffs_in_complete', required = True, type=str, 
@@ -299,7 +303,7 @@ class Accessions:
     #
     # EXTRACTING FOR NOW: NC and NZ
 
-    def __init__( self, prokaryotes, scaffs_in_complete, names_dmp_file ):
+    def __init__( self, prokaryotes, eukaryotes, viruses, scaffs_in_complete, names_dmp_file ):
         self.accessions = {}
 
         scafs = dict([(l[0][3:7],l[1].strip().split(',')) for l in (
@@ -394,7 +398,7 @@ class Accessions:
 if __name__ == '__main__':
     par = read_params(sys.argv)
 
-    accessions = Accessions( par['prokaryotes'], par['scaffs_in_complete'], par['catalog'] )
+    accessions = Accessions( par['prokaryotes'], par['eukaryotes'], par['viruses'], par['scaffs_in_complete'], par['catalog'] )
     names = Names( par['names'] )
     tax_tree = Nodes( par['nodes'], names.get_tax_ids_to_names(), accessions.get_accessions() ) 
     tax_tree.add_internal_accessions()
