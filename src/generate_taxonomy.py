@@ -306,6 +306,8 @@ class Accessions:
     def __init__( self, prokaryotes, eukaryotes, viruses, scaffs_in_complete, names_dmp_file ):
         self.accessions = {}
 
+        # Create dictionary with scaffold as key and list of contig accessions as value.
+        # Simply reads scaffs.txt to file.
         scafs = dict([(l[0][3:7],l[1].strip().split(',')) for l in (
                         line.split('\t') for line in open(scaffs_in_complete))])
         
