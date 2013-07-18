@@ -66,6 +66,8 @@ class Nodes:
 
     def __init__( self, nodes_dmp_file, tax_ids_to_names = None, accessions = None):
         tmp_nodes = {}
+        #Read all fields from nodes.dmp file
+        #tmp_nodes related tax_id to each clade
         with open( nodes_dmp_file ) as inpf:
             for line in (l.strip().split('\t') for l in inpf):
                 ( tax_id, parent_tax_id, rank, embl_code, division_id, inherited_div_flag,
@@ -256,6 +258,7 @@ class Names:
     #
 
     def __init__( self, names_dmp_file ):
+        #Read from file names.dmp, get information in every field
         self.tax_ids_to_names = {}
         with open( names_dmp_file ) as inpf:
             for line in (l.strip().split('\t') for l in inpf):
