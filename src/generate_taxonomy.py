@@ -327,14 +327,15 @@ class Accessions:
                     acc_ok.add( line[2].split("_")[1][:4] ) 
         
         ncbi_files = [prokaryotes,eukaryotes]
-       	#The following are the indexes for prokaryotes and eukaryotes NCBI file and what they pertain to depending on organism type.
-	#We treat euks and proks separately from viruses because the fields in viruses do not coincide with the fields in euks and proks.
-	#Organism/name		1
-	#Chromosoms/refseq	8
-	#WGS			12
-	#Status			19
+       	#The following are the indexes for prokaryotes and eukaryotes NCBI file and what field they represent.
+	    #We treat euks and proks separately from viruses because the fields in viruses do not coincide with the fields 
+        #in euks and proks.
+	    #Organism/name		1
+	    #Chromosoms/refseq	8
+	    #WGS			12
+	    #Status			19
         for nf in ncbi_files:
-	    print nf
+	        print nf
             #Parse NCBI prokaryotes and eukaryotes file
             with open( nf ) as inpf:
                 for line in (l.strip().split('\t') for l in inpf):
@@ -377,7 +378,44 @@ class Accessions:
                                            'status' : status,
                                            'gen_seqs' : gen_seqs }
                     
-        
+        with open( viruses ) as inpf:
+                for line in (l.strip().split('\t') for l in inpf):
+                    #Ignore line if comment, if status of genome = no data, or if both Chromosome/Refseq and WGS fields are empty
+                    if line[0][0] == '#':
+                        continue
+                    if line[14] == "No data" or "SRA" in line[14]:
+                        continue
+                
+                    #Get name, taxon id, and status of organism. Status is final 
+                    #if WGS field is empty. If it contains four-letter code, 
+                    #status is draft.
+                    name = line[0]
+                    taxid = int(line[1])
+                    status = "final"
+            
+                    #If status is final, get NCBI accession number(s). Otherwise, get four letter
+                    #code refering to refseq file name in which the draft genome is contained
+                    if status == "final":
+                        gen_seqs_tmp = line[8].split(",")
+                        gen_seqs = list(set([gs for gs in gen_seqs_tmp if gs in acc_ok]))
+                    else:
+                        if line[12][:4] in scafs:
+                            if line[12][:4] in acc_ok:
+                                gen_seqs = scafs[line[12][:4]]
+                            else:
+                                gen_seqs = []
+                        else:
+                            gen_seqs_tmp = [l[:4] for l in line[12].split(",")]
+                            gen_seqs = list(set([gs for gs in gen_seqs_tmp if gs in acc_ok]))
+
+
+                    if not gen_seqs:
+                        #print gen_seqs_tmp
+                        continue
+
+                    self.accessions[taxid] = { 'name' : name,
+                                           'status' : status,
+                                           'gen_seqs' : gen_seqs } 
        	
 
         """
