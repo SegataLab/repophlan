@@ -326,10 +326,16 @@ class Accessions:
                 if code == "NZ":
                     acc_ok.add( line[2].split("_")[1][:4] ) 
         
-        ncbi_files = [prokaryotes,eukaryotes,viruses]
-        
+        ncbi_files = [prokaryotes,eukaryotes]
+       	#The following are the indexes for prokaryotes and eukaryotes NCBI file and what they pertain to depending on organism type.
+	#We treat euks and proks separately from viruses because the fields in viruses do not coincide with the fields in euks and proks.
+	#Organism/name		1
+	#Chromosoms/refseq	8
+	#WGS			12
+	#Status			19
         for nf in ncbi_files:
-            #Parse NCBI prokaryotes file
+	    print nf
+            #Parse NCBI prokaryotes and eukaryotes file
             with open( nf ) as inpf:
                 for line in (l.strip().split('\t') for l in inpf):
                     #Ignore line if comment, if status of genome = no data, or if both Chromosome/Refseq and WGS fields are empty
@@ -372,7 +378,8 @@ class Accessions:
                                            'gen_seqs' : gen_seqs }
                     
         
-       
+       	
+
         """
         with open( names_dmp_file ) as inpf:
             for line in (l.strip().split('\t') for l in inpf):
