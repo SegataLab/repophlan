@@ -43,7 +43,7 @@ ftp.dir(all_files.append)
 print 'Got list of files'
 for file in all_files:
 	fn = file.split()[-1]
-	if fn[:8] == 'complete' and (fn[-14:] == 'genomic.fna.gz' or fn[-15:] == 'genomic.gbff.gz' or fn[-12] == 'mstr.gbff.gz'):
+	if (fn[:8] == 'complete' or fn[:5] == 'viral') and (fn[-14:] == 'genomic.fna.gz' or fn[-15:] == 'genomic.gbff.gz' or fn[-12] == 'mstr.gbff.gz')
 		print 'Downloading',fn,'....'
 		try:
   			bashCommand = 'wget -N -P '+refseqdbloc+' '+refseqdburl+fn
