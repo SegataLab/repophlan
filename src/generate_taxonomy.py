@@ -392,26 +392,7 @@ class Accessions:
                     name = line[0]
                     taxid = int(line[1])
                     status = "final"
-            
-                    #If status is final, get NCBI accession number(s). Otherwise, get four letter
-                    #code refering to refseq file name in which the draft genome is contained
-                    if status == "final":
-                        gen_seqs_tmp = line[8].split(",")
-                        gen_seqs = list(set([gs for gs in gen_seqs_tmp if gs in acc_ok]))
-                    else:
-                        if line[12][:4] in scafs:
-                            if line[12][:4] in acc_ok:
-                                gen_seqs = scafs[line[12][:4]]
-                            else:
-                                gen_seqs = []
-                        else:
-                            gen_seqs_tmp = [l[:4] for l in line[12].split(",")]
-                            gen_seqs = list(set([gs for gs in gen_seqs_tmp if gs in acc_ok]))
-
-
-                    if not gen_seqs:
-                        #print gen_seqs_tmp
-                        continue
+ 		    gen_seqs = []           
 
                     self.accessions[taxid] = { 'name' : name,
                                            'status' : status,

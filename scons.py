@@ -18,6 +18,8 @@ i_ncbi_nodes = oo.fin( "ncbi/nodes.dmp" )
 i_ncbi_names = oo.fin( "ncbi/names.dmp" )
 i_refseq_cat = oo.fin( "refseq/RefSeq-release59.catalog" )
 i_prokaryotes = oo.fin( "ncbi/prokaryotes.txt" )
+i_eukaryotes = oo.fin( "ncbi/eukaryotes.txt" )
+i_viruses = oo.fin( "ncbi/viruses.txt" )
 
 if_refseq = "refseq/"
 

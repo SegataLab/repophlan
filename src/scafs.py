@@ -39,7 +39,12 @@ def run(pars):
     scafs = []
     
     #For all draft genome master records, if the annotation file 
-    #is not available, get all contig accessions for the scaffold manually.
+    #is not available, it means they are actually stored in the 
+    #same files where "final" genomes are. Only, they would have 
+    #more than one contig per chromosome, since they are still 
+    # draft genomes. For draft genomes stored in this way, we need 
+    #to create scaffs file which gives accessions of every contig
+    #pertaining to that project.
     for mstr in glob.glob(pars['refseq_dir']+"/completeNZ_*.mstr.gbff.gz" ):
         fna_in = pars['refseq_dir']+".".join(os.path.basename( mstr ).split(".")[:1]) + ".genomic.gbff.gz" 
         if not os.path.exists( fna_in ):
@@ -47,7 +52,7 @@ def run(pars):
             if scaf:
                 scafs.append(scaf)
                 
-    #Output all scaffolds as separate lines to file.
+    #Output all hash table entries as separate lines to file.
     with open( pars['output'], "w" ) as out:
         for f,t in scafs:
             out.write( f+"\t"+t+"\n" )
