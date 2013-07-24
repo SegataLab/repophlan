@@ -1,4 +1,16 @@
-#Goes through viral.1.1.genomic.fna.gz and constructs table relating name of virus to NCBI accession number
+# ==============================================================================
+# get_viral_accessions.py
+
+#
+# Authors: Roman Stolyarov (r.m.stolyarov@gmail.com)
+#
+# #Goes through viral.1.1.genomic.fna.gz and constructs table relating 
+#full name of virus to NCBI accession. Prints table to file.
+
+# ==============================================================================
+__author__ = 'Roman Stolyarov (r.m.stolyarov@gmail.com)'
+__version__ = '1.1.1'
+__date__ = '23 July 2013'
 
 from collections import deque
 
