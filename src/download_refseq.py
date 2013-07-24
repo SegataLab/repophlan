@@ -17,10 +17,17 @@ import subprocess
 from ftplib import FTP
 import csv
 import os
+import argparse
 
-def readSettings():
+def parseArgs():
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--settings", help="Settings file name", default='settings.txt')
+        args = parser.parse_args()
+        return args
+
+def readSettings(args):
 	settings = {}
-	f = open("settings.txt")
+	f = open(args.settings)
 	data = f.readlines()
 	for line in data:
 		key, value = line.split("\t")
@@ -28,7 +35,7 @@ def readSettings():
 	return settings
 
 #Parse settings file, set relevant variables
-settings = readSettings()
+settings = readSettings(args)
 refseqdbftp = settings['refseqdbftp'][0]
 refseqdbpath = settings['refseqdbpath'][0]
 refseqdbloc = settings['refseqdbloc'][0]
