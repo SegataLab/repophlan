@@ -13,6 +13,7 @@ __version__ = '1.1.1'
 __date__ = '23 July 2013'
 
 from collections import deque
+import argparse
 
 def parseArgs():
         parser = argparse.ArgumentParser()
@@ -21,7 +22,7 @@ def parseArgs():
         args = parser.parse_args()
         return args
 
-def readSettings():
+def readSettings(args):
 	settings = {}
 	f = open(args.settings)
 	data = f.readlines()
@@ -31,9 +32,9 @@ def readSettings():
 	return settings
 
 
-settings = readSettings()
+settings = readSettings(args)
 args = parseArgs()
-vf = settings['refseqdbloc'][0]+settings['virusfna']
+vf = settings['refseqdbloc'][0]+settings['virusfna'][0]
 virus_file = open(vf,'r')
 data = virus_file.readlines()
 viral_accessions = {}
