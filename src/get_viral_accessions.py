@@ -23,7 +23,7 @@ def parseArgs():
 
 def readSettings():
 	settings = {}
-	f = open("settings.txt")
+	f = open(args.settings)
 	data = f.readlines()
 	for line in data:
 		key, value = line.split("\t")
@@ -33,7 +33,7 @@ def readSettings():
 
 settings = readSettings()
 args = parseArgs()
-vf = settings['refseqdbloc'][0]+'viral.1.1.genomic.fna'
+vf = settings['refseqdbloc'][0]+settings['virusfna']
 virus_file = open(vf,'r')
 data = virus_file.readlines()
 viral_accessions = {}
