@@ -35,9 +35,9 @@ def parseArgs():
 	args = parser.parse_args()
 	return args
 
-def readSettings():
+def readSettings(args):
 	settings = {}
-	f = open("settings.txt")
+	f = open(args.settings)
 	data = f.readlines()
 	for line in data:
     		key, value = line.split("\t")
@@ -60,7 +60,7 @@ def download(url,logfile):
         	f.write("Error downloading file from "+url+"\n")
 
 args = parseArgs()
-settings = readSettings()
+settings = readSettings(args)
 makeNewDirectory(args.outputdir)
 f = open(args.logfile,'a')
 f.write(time.strftime("\nRun of download_Big6 on %Y-%m-%d %H:%M:%S\n", time.gmtime()))
