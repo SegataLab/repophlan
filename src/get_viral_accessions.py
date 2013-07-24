@@ -31,15 +31,37 @@ def readSettings(args):
 		settings[key] = value.split()
 	return settings
 
+def categorize(virus_accessions):
+	categories = {}
+	for full_name in virus_accessions:
+		n = len(full_name[0])
+		for i in range(n):
+			el = full_name[0][i]
+			if i+1<n:
+				el1 = full_name[0][i+1]
+			else:
+				el1 = None
+			if "virus" in el or "phage" in el:
+				if len(el1) == 2:
+					scientific_name = full_name[0][:full_name[0].index(el)+2]
+				else:
+					scientific_name = full_name[0][:full_name[0].index(el)+1]
+				if scientific_name in categories:
+					categories[scientific_name].append([full_name[0],full_name[1]])
+				else:
+					categories[scientific_name] = [[full_name[0],full_name[1]]]
+	return categories
 
 settings = readSettings(args)
 args = parseArgs()
 vf = settings['refseqdbloc'][0]+settings['virusfna'][0]
 virus_file = open(vf,'r')
 data = virus_file.readlines()
-viral_accessions = {}
+viral_accessions_string = {}
+viral_accessions_list = []
 skipped = 0
 skippedlist = []
+virus_names = []
 for line in data:
 	if line[0] != ">":
 		continue
@@ -53,6 +75,7 @@ for line in data:
 	str = None
 	name = ""
 	i = 0
+	virus_names.append(list(header))
 	while str == None or (header[i] != "complete" and header[i] != "genomic" and header[i] != "genome"):
 		str = header[i]
 		if str[-1] == ",":
@@ -61,11 +84,9 @@ for line in data:
 		else:
 			name = name + str + " "
 		i = i+1
-	viral_accessions[name] = ncbi_accession
+	viral_accessions_string[name] = ncbi_accession
+	viral_accessions_list.append([tuple(header),ncbi_accession])
 
-print "skipped:",skipped
-for el in skippedlist:
-	print el
 with open( args.output, "w" ) as out:
 	for key in viral_accessions:
         	out.write( key+"\t"+viral_accessions[key]+"\n" )
