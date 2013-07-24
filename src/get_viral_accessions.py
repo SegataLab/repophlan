@@ -14,6 +14,13 @@ __date__ = '23 July 2013'
 
 from collections import deque
 
+def parseArgs():
+        parser = argparse.ArgumentParser()
+		parser.add_argument("--settings", help="Input settings file name", default='settings.txt')
+        parser.add_argument("--output", help="Output file name", default='virus_accessions.txt')
+        args = parser.parse_args()
+        return args
+
 def readSettings():
 	settings = {}
 	f = open("settings.txt")
@@ -25,6 +32,7 @@ def readSettings():
 
 
 settings = readSettings()
+args = parseArgs()
 vf = settings['refseqdbloc'][0]+'viral.1.1.genomic.fna'
 virus_file = open(vf,'r')
 data = virus_file.readlines()
@@ -57,6 +65,6 @@ for line in data:
 print "skipped:",skipped
 for el in skippedlist:
 	print el
-with open( "virus_accessions.txt", "w" ) as out:
+with open( args.output, "w" ) as out:
 	for key in viral_accessions:
         	out.write( key+"\t"+viral_accessions[key]+"\n" )
