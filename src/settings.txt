@@ -10,3 +10,6 @@ delete_files	delnodes.dmp merged.dmp gencode.dmp gc.prt division.dmp citations.d
 refseqdbftp	ftp.ncbi.nlm.nih.gov
 refseqdbpath	refseq/release/complete/
 refseqdbloc	/banche_dati/sharedCM/genomicDB/
+virusfnagz	viral.1.1.genomic.fna.gz
+virusfna	viral.1.1.genomic.fna
+virusgbffgz	viral.1.genomic.gbff.gz
