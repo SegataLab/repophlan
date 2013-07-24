@@ -65,31 +65,34 @@ class Nodes:
         pass
 
     def __init__( self, nodes_dmp_file, tax_ids_to_names = None, accessions = None):
-        tmp_nodes = {}
-        #Read all fields from nodes.dmp file
-        #tmp_nodes related tax_id to each clade
+        #Go through every line of Nodes file to construct tree. tmp_nodes will be a dictionary pointing from the taxid to its clade
+	tmp_nodes = {}
         with open( nodes_dmp_file ) as inpf:
             for line in (l.strip().split('\t') for l in inpf):
                 ( tax_id, parent_tax_id, rank, embl_code, division_id, inherited_div_flag,
                 genetic_code_id, inherited_GC_flag, mitochondrial_genetic_code, inherited_MGC_flag,
                 GenBank_hidden_flag, hidden_subtree_root_flag, comments ) = line[::2]
-
+		
+		#For every entry in Nodes (every location in the tree) create clade containing the scientific name and pointer to the parent node.
+		#Specify the rank of the clade and the taxonomic ID of the root.
                 name = (tax_ids_to_names[int(tax_id)] if tax_ids_to_names else None)
 
                 clade = BClade( clades = [], name = name )
                 clade.parent_tax_id = int(parent_tax_id)
                 clade.rank = re.sub(r'\W+', '', rank).strip("_")
-                clade.tax_id = int(tax_id)
-                
+                clade.tax_id = int(tax_id)         
                 clade.accession = accessions[clade.tax_id] if clade.tax_id in accessions else []
-                if clade.tax_id in accessions:
+                
+		#Set clade status values to "True" for sequence data and "final" or "draft" if it appears in accessions (taxid -> name, status, accessions)
+		if clade.tax_id in accessions:
                     clade.sequence_data = True
                     clade.status = clade.accession['status']
             
                 tmp_nodes[clade.tax_id] = clade 
                 
                 # can add any other info in node.dmp
-
+	
+	#Build the tree using all the clades (iterate through clades using tmp_nodes)
         self.tree = BTree()
         for node in tmp_nodes.values():
             # node = parent is the trick from NCBI to identify the root
@@ -99,7 +102,7 @@ class Nodes:
             parent = tmp_nodes[node.parent_tax_id]
             parent.clades.append( node )
 
-
+    #Recursively goes through all clades in the tree. Each clade root gets list of all accessions in the clade.
     def add_internal_accessions( self, clade = None ):
         if not clade:
             clade = self.tree.root
@@ -110,14 +113,15 @@ class Nodes:
             clade.all_accessions += self.add_internal_accessions( child )
         return clade.all_accessions
        
-
+    #Recursively go through tree, remove references to clades that have no accession information in any of their nodes.
     def remove_subtrees_without_accessions( self, clade = None ):
         if not clade:
             clade = self.tree.root
         clade.clades = [c for c in clade.clades if len(c.all_accessions)]
         for c in clade.clades:
             self.remove_subtrees_without_accessions( c )
-    
+   
+    #Recursively go through the tree, and at each node remove references to child clades pertaining to plasmid DNA.
     def remove_plasmids( self, clade = None ):
         if not clade:
             clade = self.tree.root
@@ -265,6 +269,7 @@ class Names:
                 tax_id, name_txt, unique, name_class = line[::2]
                 
                 # extracting scientific names only (at least for now) which are unique!
+		#tax_ids_to_names relates taxid to the sole scientific name of the organism
                 if name_class == "scientific name":
                     name = re.sub(r'\W+', '_', name_txt).strip("_")
                     self.tax_ids_to_names[ int(tax_id) ] = name
@@ -306,27 +311,36 @@ class Accessions:
     #
     # EXTRACTING FOR NOW: NC and NZ
 
-    def __init__( self, prokaryotes, eukaryotes, viruses, scaffs_in_complete, names_dmp_file, virus_accessions ):
+    def __init__( self, prokaryotes, eukaryotes, viruses, scaffs_in_complete, catalog, virus_accessions ):
         self.accessions = {}
 
-        # Create dictionary with scaffold as key and list of contig accessions as value.
-        # Simply reads scaffs.txt.
+        # Read from scaffs.txt and create dictionary with project/scaffold as key and list of contig accessions as value.
         scafs = dict([(l[0][3:7],l[1].strip().split(',')) for l in (
                         line.split('\t') for line in open(scaffs_in_complete))])
         
-        #Populate acc_ok with only chromosome DNA accessions (exclude plastid,plasmid,mitochondria)
+        #Go through Refseq catalog
+	#Populate acc_ok with only contiguous, chromosome DNA accessions (exclude plastid,plasmid,mitochondria) for virs,euks,proks.
+	#va_dict is a dictionary relating virus taxonomic IDs to NCBI accessions. Useful viral DNA accessions always begin with "NC".
         acc_ok = set() 
-        with open( names_dmp_file ) as inpf:
+	va_dict = {}
+        with open( catalog ) as inpf:
             for line in (l.strip().split('\t') for l in inpf):
                 code = line[2].split("_")[0]
                 if 'plasmid' in line[4] or "mitochondrion" in line[4] or 'plastid' in line[4]:
                     continue
-                if code == "NC":
-                    acc_ok.add( line[2] )
+	    	if code == "NC":
+	    		if 'viral' in line[4]:
+				vtaxid = int(line[0])
+		    		if vtaxid not in va_dict:
+		    			va_dict[vtaxid] = [line[2]]
+		    		else:
+					va_dict[vtaxid].append(line[2])
+			acc_ok.add(line[2])
                 if code == "NZ":
-                    acc_ok.add( line[2].split("_")[1][:4] ) 
+                    	acc_ok.add( line[2].split("_")[1][:4] )
+	
+		    
         
-        ncbi_files = [prokaryotes,eukaryotes]
        	#The following are the important fields for prokaryotes and eukaryotes NCBI file and what index they are found at.
 	#We treat euks and proks separately from viruses because the fields in viruses do not coincide with the fields 
         #in euks and proks.
@@ -334,12 +348,13 @@ class Accessions:
 	    #Chromosoms/refseq		8
 	    #WGS			12
 	    #Status			19
-        for nf in ncbi_files:
-            #Parse NCBI prokaryotes and eukaryotes file
+        #Here we go through eukaryotes.txt and prokaryotes.txt, extracting name, taxid, accession, and status, and put into
+	#dictionary self.accessions, with taxid as key value.
+	ncbi_files = [prokaryotes,eukaryotes]
+	for nf in ncbi_files:
             with open( nf ) as inpf:
-		print nf
                 for line in (l.strip().split('\t') for l in inpf):
-                    #Ignore line if comment, if status of genome = no data, or if both Chromosome/Refseq and WGS fields are empty
+                    #Ignore entry if comment, if status of genome = no data, or if both Chromosome/Refseq and WGS fields are empty
                     if line[0][0] == '#':
                         continue
                     if line[19] == "No data":
@@ -369,64 +384,46 @@ class Accessions:
                             gen_seqs_tmp = [l[:4] for l in line[12].split(",")]
                             gen_seqs = list(set([gs for gs in gen_seqs_tmp if gs in acc_ok]))
 
-
+		    #If accession data not available, this entry is useless so we move on without adding it to self.accessions
                     if not gen_seqs:
-                        #print gen_seqs_tmp
                         continue
 
                     self.accessions[taxid] = { 'name' : name,
                                            'status' : status,
                                            'gen_seqs' : gen_seqs }
-                    
+      
+	#Go through entries in viruses.txt
         with open( viruses ) as inpf:
-		print "viruses now"
-		va_file = open(virus_accessions,"r")        
-		va_lines = va_file.readlines()
-		va_dict = {}
-		for line in va_lines:
-			key, value = line.split("\t")
-			va_dict[key] = [value,0]
 		notfound = []
-		duplicates = []
 		tot_found = 0
                	for line in (l.strip().split('\t') for l in inpf):
-                   	#Ignore line if comment, if status of genome = no data, or if both Chromosome/Refseq and WGS fields are empty
+                   	#Ignore line if comment, if status of genome = no data, or if status = "SRA or Traces" (means very little genome info available)
                    	if line[0][0] == '#':
                         	continue
                     	if line[14] == "No data" or "SRA" in line[14]:
                         	continue
                 
-                    	#Get name, taxon id, and status of organism. Status is final 
-                    	#if WGS field is empty. If it contains four-letter code, 
-                    	#status is draft.
+                    	#Get name, taxon id, status, and accessions of organism. Status is final 
+                    	#for all viruses with availabe accessions.
                     	name = line[0]
                     	taxid = int(line[1])
                     	status = "final"
-		    	gen_seqs = []
-			if taxid in self.accessions.keys():
-				duplicates.append(name)
+			if taxid in va_dict:
+		    		gen_seqs = va_dict[taxid]
+			else:
+				gen_seqs = []
+				notfound.append([taxid,name])
+
+			if not gen_seqs:
 				continue
-		    	for full_name in va_dict.keys():
-				if name in full_name or name.strip('-') in full_name.strip('-') or name.strip('virus') in full_name:
-				    	gen_seqs.append(va_dict[full_name][0].strip())
-				    	found = 1
-					tot_found = tot_found+1
-					va_dict[full_name][1] = 1
-                	
+
 			self.accessions[taxid] = { 'name' : name,
                                            'status' : status,
                                            'gen_seqs' : gen_seqs }
-
-		for id in va_dict.keys():
-			if va_dict[id][1] == 0:
-				notfound.append(id)
-       	
-		print notfound
-		print "tot_found:",len(va_dict.keys())-len(notfound)
-		print "not_found:",len(notfound)
-		print "-------------------------------"
-		print duplicates
-		print "num_dupes:",len(duplicates)
+		#print notfound	
+		#print "tot:",len(va_dict.keys())
+		#print "tot_found:",len(va_dict.keys())-len(notfound)
+		#print "not_found:",len(notfound)
 
 
         """
