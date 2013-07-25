@@ -28,10 +28,14 @@ def op( fn ):
     return open( fn )
 
 def run( pars ):
-
+    #input_handle is name of genbank flatfile (annotation)
+    #fna is a dictionary with fasta accessions pointing to the genomes
     input_handle  = pars['gb']
     fna = SeqIO.index( pars['fna'], "fasta")
 
+    #open taxonomy file. get all fields for each line. if four-letter code, its draft
+    #if not four letter code, its final and get list of accessions.
+    #keep all 
     tids2accs = {} 
     for name,status,accs,tid,tax in (l.strip().split('\t') for l in open( pars['taxonomy'] )):
         if len(accs) == 4:
