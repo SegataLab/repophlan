@@ -33,21 +33,23 @@ def run( pars ):
     input_handle  = pars['gb']
     fna = SeqIO.index( pars['fna'], "fasta")
 
-    #open taxonomy file. get all fields for each line. if four-letter code, its draft
-    #if not four letter code, its final and get list of accessions.
-    #keep all 
+    #open taxonomy file. get all fields for each line. tids2accs is dictionary
+    #for taxon id -> accession. if four-letter code, it's draft.
+    #if not four letter code, it's final or draft. 
     tids2accs = {} 
     for name,status,accs,tid,tax in (l.strip().split('\t') for l in open( pars['taxonomy'] )):
         if len(accs) == 4:
             tids2accs[tid] = {'acc': [accs]}
         else:
             tids2accs[tid] = {'acc': accs.split( "," )}
-        
+    
+    #create reverse dictionary (accessions to taxon ids)    
     accs2tids = {}
     for k,v in tids2accs.items():
         for vv in v['acc']:
             accs2tids[vv] = k
     
+    #
     for seq_record in SeqIO.parse( op( input_handle ), "genbank") :
         for seq_record_id in [seq_record.id,seq_record.id[3:7]]:
             if seq_record_id in accs2tids:
