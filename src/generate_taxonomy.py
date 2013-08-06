@@ -314,13 +314,16 @@ class Accessions:
     def __init__( self, prokaryotes, eukaryotes, viruses, scaffs_in_complete, catalog, virus_accessions ):
         self.accessions = {}
 
+        # Read from scaffs.txt and create dictionary with project/scaffold as key and list of contig accessions as value.
+	    scafs = dict([(l[0][3:7],l[1].strip().split(',')) for l in (
+			                        line.split('\t') for line in open(scaffs_in_complete))])
         
         #Go through Refseq catalog
-	#Populate acc_ok with only contiguous, chromosome DNA accessions (exclude plastid,plasmid,mitochondria) for virs,euks,proks.
-	#va_dict is a dictionary relating virus taxonomic IDs to NCBI accessions. Useful viral DNA accessions always begin with "NC".
+	    #Populate acc_ok with only contiguous, chromosome DNA accessions (exclude plastid,plasmid,mitochondria) for virs,euks,proks.
+	    #va_dict is a dictionary relating virus taxonomic IDs to NCBI accessions. Useful viral DNA accessions always begin with "NC".
         acc_ok = set() 
-	va_dict = {}
-	scaf_dict = {}
+	    va_dict = {}
+	    scaf_dict = {}
         with open( catalog ) as inpf:
             for line in (l.strip().split('\t') for l in inpf):
                 code = line[2].split("_")[0]
@@ -328,30 +331,28 @@ class Accessions:
                     continue
 	    	if code == "NC":
 	    		if 'viral' in line[4]:
-				vtaxid = int(line[0])
+				    vtaxid = int(line[0])
 		    		if vtaxid not in va_dict:
 		    			va_dict[vtaxid] = [line[2]]
 		    		else:
-					va_dict[vtaxid].append(line[2])
-			acc_ok.add(line[2])
-                if code == "NZ":
-                    	acc_ok.add( line[2].split("_")[1][:4] )
-		if code == "NW":
-			staxid = int(line[0])
-			if staxid not in scaf_dict:
-				scaf_dict[staxid] = [line[2]]
-			else:
-				scaf_dict[staxid].append(line[2])
-			acc_ok.add( line[2])
-	a = 0	
+					    va_dict[vtaxid].append(line[2])
+			    acc_ok.add(line[2])
+            if code == "NZ":
+                acc_ok.add( line[2].split("_")[1][:4] )
+		    if code == "NW":
+			    staxid = int(line[0])
+			    if staxid not in scaf_dict:
+				    scaf_dict[staxid] = {"name": line[1], "WGS": [line[2]]}
+			    else:
+				    scaf_dict[staxid]["WGS"].append(line[2])
+			    acc_ok.add( line[2])
+	#a = 0	
 	#with open(scaffs_in_complete, 'a') as file:
 	#	for taxid in scaf_dict:
 	#	    	a = a+1
 	#	    	file.write(repr(taxid)+"\t"+",".join(scaf_dict[taxid]+"\n"))
 	#print repr(a)
-        # Read from scaffs.txt and create dictionary with project/scaffold as key and list of contig accessions as value.
-	scafs = dict([(l[0][3:7],l[1].strip().split(',')) for l in (
-			                        line.split('\t') for line in open(scaffs_in_complete))])
+
 		    
         
        	#The following are the important fields for prokaryotes and eukaryotes NCBI file and what index they are found at.
@@ -362,54 +363,82 @@ class Accessions:
 	    #WGS			12
 	    #Status			19
         #Here we go through eukaryotes.txt and prokaryotes.txt, extracting name, taxid, accession, and status, and put into
-	#dictionary self.accessions, with taxid as key value.
-	ncbi_files = [prokaryotes,eukaryotes]
-	for nf in ncbi_files:
-	    print "doing",nf
-            with open( nf ) as inpf:
-                for line in (l.strip().split('\t') for l in inpf):
-                    #Ignore entry if comment, if status of genome = no data, or if both Chromosome/Refseq and WGS fields are empty
-                    if line[0][0] == '#':
-                        continue
-                    if line[18] == "No data":
-                        continue
-		    if nf == prokaryotes:
-                    	if line[8] == '-' and line[12] == '-':
-                        	continue
-		    else:
-			if line[12] == '-':
-				continue
-                
-                    #Get name, taxon id, and status of organism. Status is final 
-                    #if WGS field is empty. If it contains four-letter code, 
-                    #status is draft.
-                    name = line[0]
-                    taxid = int(line[1])
-		    if nf == prokaryotes:
-                    	status = "final" if line[12] == '-' else "draft"
-		    else:
-			status = "draft"
-   
-                    #If status is final, get NCBI accession number(s). Otherwise, get four letter
-                    #code refering to refseq file name in which the draft genome is contained
-                    if status == "final":
-                        gen_seqs_tmp = line[8].split(",")
-                        gen_seqs = list(set([gs for gs in gen_seqs_tmp if gs in acc_ok]))
-                    else:
-                        if line[12][:4] in scafs:
-                            if line[12][:4] in acc_ok:
-                                gen_seqs = scafs[line[12][:4]]
-                            else:
-                                gen_seqs = []
+
+	    print "doing",prokaryotes
+        with open( prokaryotes ) as inpf:
+            for line in (l.strip().split('\t') for l in inpf):
+                #Ignore entry if comment, if status of genome = no data, or if both Chromosome/Refseq and WGS fields are empty
+                if line[0][0] == '#':
+                    continue
+                if line[18] == "No data":
+                    continue
+                if line[8] == '-' and line[12] == '-':
+                	continue            
+                #Get name, taxon id, and status of organism. Status is final 
+                #if WGS field is empty. If it contains four-letter code, 
+                #status is draft.
+                name = line[0]
+                taxid = int(line[1])
+	          	status = "final" if line[12] == '-' else "draft"    
+                #If status is final, get NCBI accession number(s). Otherwise, get four letter
+                #code refering to refseq file name in which the draft genome is contained
+                if status == "final":
+                    gen_seqs_tmp = line[8].split(",")
+                    gen_seqs = list(set([gs for gs in gen_seqs_tmp if gs in acc_ok]))
+                else:
+                    if line[12][:4] in scafs:
+                        if line[12][:4] in acc_ok:
+                            gen_seqs = scafs[line[12][:4]]
                         else:
-                            gen_seqs_tmp = [l[:4] for l in line[12].split(",")]
-                            gen_seqs = list(set([gs for gs in gen_seqs_tmp if gs in acc_ok]))
+                            gen_seqs = []
+                    else:
+                        gen_seqs_tmp = [l[:4] for l in line[12].split(",")]
+                        gen_seqs = list(set([gs for gs in gen_seqs_tmp if gs in acc_ok]))
+                
+                #If accession data not available, this entry is useless so we move on without adding it to self.accessions
+                if not gen_seqs:
+                    continue
 
-		    #If accession data not available, this entry is useless so we move on without adding it to self.accessions
-                    if not gen_seqs:
+                self.accessions[taxid] = { 'name' : name,
+                                           'status' : status,
+                                           'gen_seqs' : gen_seqs }
+        
+        print "doing",eukaryotes
+        with open( eukaryotes ) as inpf:
+            for line in (l.strip().split('\t') for l in inpf):
+                #Ignore entry if comment, if status of genome = no data, or if both Chromosome/Refseq and WGS fields are empty
+                if line[0][0] == '#':
+                    continue
+                if line[18] == "No data":
+                    continue
+                if line[12] == '-':
+                	continue            
+                
+                #Get name, taxon id, and status of organism. Status is final 
+                #if WGS field is empty. If it contains four-letter code, 
+                #status is draft.
+                name = line[0]
+                taxid = int(line[1])
+                status = "final"
+                
+                #If status is final, get NCBI accession number(s). Otherwise, get four letter
+                #code refering to refseq file name in which the draft genome is contained
+                if line[12][:4] in scafs:
+                    status = "draft"
+                    if line[12][:4] in acc_ok:
+                        gen_seqs = scafs[line[12][:4]]
+                    else:
+                        gen_seqs = []
+                
+                if not gen_seqs:
+                    if taxid not in scaf_dict:
                         continue
+                    else:
+                        self.accessions[taxid] = { 'name' : scaf_dict[taxid]["name"],
+                                           'status' : status,
+                                           'gen_seqs' : scaf_dict[taxid]["WGS"] }
 
-                    self.accessions[taxid] = { 'name' : name,
+                self.accessions[taxid] = { 'name' : name,
                                            'status' : status,
                                            'gen_seqs' : gen_seqs }
 	#Go through entries in viruses.txt
