@@ -315,15 +315,16 @@ class Accessions:
         self.accessions = {}
 
         # Read from scaffs.txt and create dictionary with project/scaffold as key and list of contig accessions as value.
-	    scafs = dict([(l[0][3:7],l[1].strip().split(',')) for l in (
+	scafs = dict([(l[0][3:7],l[1].strip().split(',')) for l in (
 			                        line.split('\t') for line in open(scaffs_in_complete))])
         
         #Go through Refseq catalog
 	    #Populate acc_ok with only contiguous, chromosome DNA accessions (exclude plastid,plasmid,mitochondria) for virs,euks,proks.
 	    #va_dict is a dictionary relating virus taxonomic IDs to NCBI accessions. Useful viral DNA accessions always begin with "NC".
         acc_ok = set() 
-	    va_dict = {}
-	    scaf_dict = {}
+	va_dict = {}
+	scaf_dict = {}
+	a = 0
         with open( catalog ) as inpf:
             for line in (l.strip().split('\t') for l in inpf):
                 code = line[2].split("_")[0]
@@ -331,28 +332,24 @@ class Accessions:
                     continue
 	    	if code == "NC":
 	    		if 'viral' in line[4]:
-				    vtaxid = int(line[0])
+				vtaxid = int(line[0])
 		    		if vtaxid not in va_dict:
 		    			va_dict[vtaxid] = [line[2]]
 		    		else:
-					    va_dict[vtaxid].append(line[2])
-			    acc_ok.add(line[2])
-            if code == "NZ":
-                acc_ok.add( line[2].split("_")[1][:4] )
-		    if code == "NW":
-			    staxid = int(line[0])
-			    if staxid not in scaf_dict:
-				    scaf_dict[staxid] = {"name": line[1], "WGS": [line[2]]}
-			    else:
-				    scaf_dict[staxid]["WGS"].append(line[2])
-			    acc_ok.add( line[2])
-	#a = 0	
-	#with open(scaffs_in_complete, 'a') as file:
-	#	for taxid in scaf_dict:
-	#	    	a = a+1
-	#	    	file.write(repr(taxid)+"\t"+",".join(scaf_dict[taxid]+"\n"))
-	#print repr(a)
-
+					va_dict[vtaxid].append(line[2])
+			    	acc_ok.add(line[2])
+                if code == "NZ":
+                    acc_ok.add( line[2].split("_")[1][:4] )
+		if code == "NW":
+		    staxid = int(line[0])
+	    	    if staxid not in scaf_dict:
+			    a = a + 1
+        		    scaf_dict[staxid] = {"name": line[1], "WGS": [line[2]]}
+		    else:
+			    scaf_dict[staxid]["WGS"].append(line[2])
+		    acc_ok.add( line[2])
+	print a
+	print scaf_dict
 		    
         
        	#The following are the important fields for prokaryotes and eukaryotes NCBI file and what index they are found at.
@@ -364,7 +361,7 @@ class Accessions:
 	    #Status			19
         #Here we go through eukaryotes.txt and prokaryotes.txt, extracting name, taxid, accession, and status, and put into
 
-	    print "doing",prokaryotes
+	print "doing",prokaryotes
         with open( prokaryotes ) as inpf:
             for line in (l.strip().split('\t') for l in inpf):
                 #Ignore entry if comment, if status of genome = no data, or if both Chromosome/Refseq and WGS fields are empty
@@ -379,7 +376,7 @@ class Accessions:
                 #status is draft.
                 name = line[0]
                 taxid = int(line[1])
-	          	status = "final" if line[12] == '-' else "draft"    
+	        status = "final" if line[12] == '-' else "draft"    
                 #If status is final, get NCBI accession number(s). Otherwise, get four letter
                 #code refering to refseq file name in which the draft genome is contained
                 if status == "final":
@@ -409,10 +406,8 @@ class Accessions:
                 #Ignore entry if comment, if status of genome = no data, or if both Chromosome/Refseq and WGS fields are empty
                 if line[0][0] == '#':
                     continue
-                if line[18] == "No data":
+                if line[18] != "Chromosomes" and line[18] != "Scaffolds or contigs":
                     continue
-                if line[12] == '-':
-                	continue            
                 
                 #Get name, taxon id, and status of organism. Status is final 
                 #if WGS field is empty. If it contains four-letter code, 
@@ -437,10 +432,11 @@ class Accessions:
                         self.accessions[taxid] = { 'name' : scaf_dict[taxid]["name"],
                                            'status' : status,
                                            'gen_seqs' : scaf_dict[taxid]["WGS"] }
-
-                self.accessions[taxid] = { 'name' : name,
+		else:
+                	self.accessions[taxid] = { 'name' : name,
                                            'status' : status,
                                            'gen_seqs' : gen_seqs }
+	
 	#Go through entries in viruses.txt
         with open( viruses ) as inpf:
 		print "doing viruses"
