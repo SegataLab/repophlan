@@ -1,3 +1,16 @@
+# ==============================================================================
+# generate_taxonomy.py
+#
+# Authors: Nicola Segata (nicola.segata@unitn.it), Roman Stolyarov (r.m.stolyarov@gmail.com)
+#
+# Creates taxonomy file and/or reduced taxonomy file for all prokaryotes, eukaryotes, and viruses
+# for which genome sequence data is present in Refseq database.
+# ==============================================================================
+
+__author__ = 'Nicola Segata (nicola.segata@unitn.it), Roman Stolyarov (r.m.stolyarov@gmail.com)'
+__version__ = '1.1.2'
+__date__ = '6 Aug 2013'
+
 #!/usr/bin/env python
 import sys
 import collections
