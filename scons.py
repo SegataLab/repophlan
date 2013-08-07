@@ -1,5 +1,5 @@
-import sfleoo
 import sys
+import sfleoo
 import collections
 import matplotlib
 import numpy as np
@@ -16,7 +16,7 @@ oo = sfleoo.ooSfle( fileDirInput = "input", fileDirOutput = "output", fileDirTmp
 # ===== GET TAXONOMY AND REFSEQ GENOMES ================
 i_ncbi_nodes = oo.fin( "ncbi/nodes.dmp" ) #specify file used initially by the pipeline
 i_ncbi_names = oo.fin( "ncbi/names.dmp" )
-i_refseq_cat = oo.fin( "refseq/RefSeq-release59.catalog" )
+i_refseq_cat = oo.fin( "refseq/RefSeq-release60.catalog" )
 i_prokaryotes = oo.fin( "ncbi/prokaryotes.txt" )
 i_eukaryotes = oo.fin( "ncbi/eukaryotes.txt" )
 i_viruses = oo.fin( "ncbi/viruses.txt" )
@@ -32,7 +32,7 @@ t_scaf_all = oo.ftmp( "scaffolds.txt" )
 #script itself. can be a python script or linux script. anything you can calll from linux command 
 #line. everything following the script name is just the arguments pertaining to the script.
 #notice that second oo.ex uses output of first as its own input
-oo.ex( [], t_scaf_all, "src/scafs.py", refseq_dir = "input/refseq/", output = t_scaf_all )
+oo.ex( [], t_scaf_all, "src/scafs.py", refseq_dir = "refseq/", output = t_scaf_all )
 oo.ex( [i_ncbi_nodes, i_ncbi_names, i_refseq_cat, t_scaf_all], [o_tax, o_red_tax], 
         "src/generate_taxonomy.py", 
         nodes = i_ncbi_nodes, names = i_ncbi_names, 
