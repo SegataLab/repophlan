@@ -37,6 +37,7 @@ oo.ex( [i_ncbi_nodes, i_ncbi_names, i_refseq_cat, t_scaf_all], [o_tax, o_red_tax
         "src/generate_taxonomy.py", 
         nodes = i_ncbi_nodes, names = i_ncbi_names, 
         catalog = i_refseq_cat, prokaryotes = i_prokaryotes,
+        eukaryotes = i_eukaryotes, viruses = i_viruses,
         scaffs_in_complete = t_scaf_all,
         output = o_tax, output_red = o_red_tax ) 
 
