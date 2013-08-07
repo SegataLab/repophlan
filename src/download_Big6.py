@@ -31,7 +31,7 @@ def parseArgs():
 	parser.add_argument("--ncbi_nodes", help="NCBI nodes file name", default="nodes.dmp")
 	parser.add_argument("--ncbi_names", help="NCBI names file name", default="names.dmp")
 	parser.add_argument("--logfile", help="Log file name", default="log.txt")
-	parser.add_argument("--outputdir", help="Output directory name", default="Big6")
+	parser.add_argument("--outputdir", help="Output directory name", default="../input")
 	args = parser.parse_args()
 	return args
 
@@ -40,6 +40,8 @@ def readSettings(args):
 	f = open(args.settings)
 	data = f.readlines()
 	for line in data:
+		if line[0][0] == "#":
+			continue
     		key, value = line.split("\t")
     		settings[key] = value.split()
 	return settings
@@ -52,6 +54,7 @@ def makeNewDirectory(newpath):
 
 def download(url,logfile):
 	try:
+		f = open(logfile,'a')
 		bashCommand = 'wget -q -N '+url
                 process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
 		output = process.communicate()[0]
