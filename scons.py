@@ -33,13 +33,13 @@ t_scaf_all = oo.ftmp( "scaffolds.txt" )
 #line. everything following the script name is just the arguments pertaining to the script.
 #notice that second oo.ex uses output of first as its own input
 oo.ex( [], t_scaf_all, "src/scafs.py", refseq_dir = "refseq/", output = t_scaf_all )
-oo.ex( [i_ncbi_nodes, i_ncbi_names, i_refseq_cat, t_scaf_all], [o_tax, o_red_tax], 
+oo.ex( [i_ncbi_nodes, i_ncbi_names, i_refseq_cat, t_scaf_all, i_prokaryotes, i_eukaryotes, i_viruses], [o_tax, o_red_tax], 
         "src/generate_taxonomy.py", 
         nodes = i_ncbi_nodes, names = i_ncbi_names, 
         catalog = i_refseq_cat, prokaryotes = i_prokaryotes,
         eukaryotes = i_eukaryotes, viruses = i_viruses,
         scaffs_in_complete = t_scaf_all,
-        output = o_tax, output_red = o_red_tax ) 
+        output = o_tax, output_red = o_red_tax, verbose = True ) 
 
 #oo.glob is like "ls" command linux + the pipeline automatically recognizes them as input files
 for fna_in in oo.glob( if_refseq+"complete.*genomic.fna" ):

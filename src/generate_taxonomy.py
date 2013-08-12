@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # ==============================================================================
 # generate_taxonomy.py
 #
@@ -11,7 +13,6 @@ __author__ = 'Nicola Segata (nicola.segata@unitn.it), Roman Stolyarov (r.m.stoly
 __version__ = '1.1.2'
 __date__ = '6 Aug 2013'
 
-#!/usr/bin/env python
 import sys
 import collections
 import re
@@ -40,9 +41,9 @@ def read_params(args):
          help="The catalog RefSeq file \"RefSeq-releaseXX.catalog\"")
     arg( '--scaffs_in_complete', metavar='scaffs_in_complete', required = True, type=str, 
          help="The scaffolds entries for draft genomes included in the \"complete\" files")
-    arg( '--output', metavar='out', default = None, type = str, 
+    arg( '--output', metavar='out', required = True, default = None, type = str, 
          help="The output taxonomy")
-    arg( '--output_red', metavar='out_red', default = None, type = str, 
+    arg( '--output_red', metavar='out_red', required = True, default = None, type = str, 
          help="The output taxonomy with reduced and fixed number of taxonomic levels")
     return vars(parser.parse_args())
 
@@ -358,7 +359,6 @@ class Accessions:
 					NW_dict[staxid] = {"name": line[1], "WGS": [line[2]]}
 				else:
 					NW_dict[staxid]["WGS"].append(line[2])
-				acc_ok.add( line[2])
 		    
         
 	#The following are the important fields for prokaryotes and eukaryotes NCBI file and what index they are found at.
@@ -369,7 +369,7 @@ class Accessions:
 	    #WGS			12
 	    #Status			19
         #Here we go through eukaryotes.txt and prokaryotes.txt, extracting name, taxid, accession, and status, and put into
-
+	#print len(acc_ok) - ~18000
 	print "doing",prokaryotes
         with open( prokaryotes ) as inpf:
             for line in (l.strip().split('\t') for l in inpf):
@@ -400,7 +400,12 @@ class Accessions:
                     else:
                         gen_seqs_tmp = [l[:4] for l in line[12].split(",")]
                         gen_seqs = list(set([gs for gs in gen_seqs_tmp if gs in acc_ok]))
-                
+               
+	       	if taxid == 351746:
+			print name
+			print taxid
+			print status
+			print gen_seqs
                 #If accession data not available, this entry is useless so we move on without adding it to self.accessions
                 if not gen_seqs:
                     continue
@@ -416,7 +421,6 @@ class Accessions:
                 if line[0][0] == '#':
                     	continue
                 if line[18] != "Chromosomes" and line[18] != "Scaffolds or contigs":
-			print line[18]
                     	continue
                 
                 #Get name, taxon id, and status of organism. Status is final 
@@ -449,9 +453,7 @@ class Accessions:
 	
 	#Go through entries in viruses.txt
         with open( viruses ) as inpf:
-		print "doing viruses"
-		notfound = []
-		tot_found = 0
+		print "doing",viruses
                	for line in (l.strip().split('\t') for l in inpf):
                    	#Ignore line if comment, if status of genome = no data, or if status = "SRA or Traces" (means very little genome info available)
                    	if line[0][0] == '#':
@@ -468,7 +470,6 @@ class Accessions:
 		    		gen_seqs = va_dict[taxid]
 			else:
 				gen_seqs = []
-				notfound.append([taxid,name])
 
 			if not gen_seqs:
 				continue
@@ -477,42 +478,6 @@ class Accessions:
                                            'status' : status,
                                            'gen_seqs' : gen_seqs }
 
-        """
-        with open( names_dmp_file ) as inpf:
-            for line in (l.strip().split('\t') for l in inpf):
-                code = line[2].split("_")[0]
-                if code == "NC":
-                    if 'plasmid' in line[4] or "mitochondrion" in line[4] or 'plastid' in line[4]:
-                        continue
-                    acc = int(line[0])
-                    if acc in self.accessions:
-                        self.accessions[int(line[0])]['accession'].append( line[2] )
-                        self.accessions[int(line[0])]['gi'].append( line[3] )
-                        self.accessions[int(line[0])]['len'].append( line[6] )
-                    else:
-                        self.accessions[int(line[0])] = { 'name': line[1],
-                                                          'accession': [line[2]],
-                                                          'gi': [line[3]],
-                                                          'refseq_dir': line[4],
-                                                          'refseq_status': line[5],
-                                                          'len': [line[6]],
-                                                          'code': code,
-                                                          'status': "final"}
-                if code == "NZ":
-                    if 'plasmid' in line[4] or "mitochondrion" in line[4]:
-                        continue
-                    if '00000000' not in line[2]:
-                        continue
-                    self.accessions[int(line[0])] = { 'name': line[1],
-                                                      'accession': [line[2]],
-                                                      'gi': [line[3]],
-                                                      'refseq_dir': line[4],
-                                                      'refseq_status': line[5],
-                                                      'len': line[6],
-                                                      'code': code,
-						      'status': "draft"}
-    
-        """
 
     def get_accessions( self ):
         return self.accessions
