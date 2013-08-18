@@ -21,7 +21,7 @@ i_prokaryotes = oo.fin( "ncbi/prokaryotes.txt" )
 i_eukaryotes = oo.fin( "ncbi/eukaryotes.txt" )
 i_viruses = oo.fin( "ncbi/viruses.txt" )
 
-if_refseq = "refseq/"
+if_refseq = "database/"
 
 o_tax = oo.fout( "full_tax.txt" ) #specify output files (not necessarily at end of pipeline)
 o_red_tax = oo.fout( "full_tax.red.txt" )
@@ -40,10 +40,9 @@ oo.ex( [i_ncbi_nodes, i_ncbi_names, i_refseq_cat, t_scaf_all, i_prokaryotes, i_e
         eukaryotes = i_eukaryotes, viruses = i_viruses,
         scaffs_in_complete = t_scaf_all,
         output = o_tax, output_red = o_red_tax, verbose = True ) 
-
 #oo.glob is like "ls" command linux + the pipeline automatically recognizes them as input files
 for fna_in in oo.glob( if_refseq+"complete.*genomic.fna" ):
-    gbf = oo.fin( "refseq/"+".".join(os.path.basename( fna_in ).split(".")[:2]) + ".genomic.gbff.gz" )
+    gbf = oo.fin( if_refseq+".".join(os.path.basename( fna_in ).split(".")[:2]) + ".genomic.gbff.gz" )
     if os.path.exists( gbf ):
         #oo.rebase = substitution
         out = oo.fout( "genomes/" + oo.rebase( fna_in, "fna", "log" ) )
@@ -56,7 +55,7 @@ for fna_in in oo.glob( if_refseq+"complete.*genomic.fna" ):
         Default( out )
 
 for fna_in in oo.glob( if_refseq+"completeNZ_*genomic.fna" ):
-    gbf = oo.fin( "refseq/"+".".join(os.path.basename( fna_in ).split(".")[:1]) + ".genomic.gbff.gz" )
+    gbf = oo.fin( "refseq/database"+".".join(os.path.basename( fna_in ).split(".")[:1]) + ".genomic.gbff.gz" )
     if os.path.exists( gbf ):
         out = oo.fout( "genomes/" + oo.rebase( fna_in, "fna", "log" ) )
         oo.ex( [gbf, fna_in, o_red_tax], out, "src/get_genome.py",
