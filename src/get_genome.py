@@ -68,12 +68,8 @@ def run( pars ):
                 gi = seq_record.annotations['gi']
                 n = 0
                 id = "|".join(["gi",gi,"ref",seq_record.id,""])
-		try:
-			fna_g = fna[id]
-		except:
-			print id
-			missed_ids.add(id)
-
+		    try:
+			    fna_g = fna[id]
                 fna_genome.append( fna_g )
                 for seq_feature in seq_record.features :
                     if seq_feature.type == "gene" :
@@ -108,7 +104,10 @@ def run( pars ):
                         name = "ncRNA"+(" "+seq_feature.qualifiers['gene'][0] if 'gene' in seq_feature.qualifiers else "")
                         name += " ["+seq_record.annotations['organism']+"]"
                         gene_des[ seq_feature.qualifiers['locus_tag'][0] ] = name
-    
+            except:
+			    print id
+			    missed_ids.add(id)
+
     outdir = os.path.dirname( pars['output'] )
     if outdir:
         outdir += "/"
