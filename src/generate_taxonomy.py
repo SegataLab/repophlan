@@ -370,7 +370,7 @@ class Accessions:
 	    #Status			19
         #Here we go through eukaryotes.txt and prokaryotes.txt, extracting name, taxid, accession, and status, and put into
 	#print len(acc_ok) - ~18000
-	print "doing",prokaryotes
+#	print "doing",prokaryotes
         with open( prokaryotes ) as inpf:
             for line in (l.strip().split('\t') for l in inpf):
                 #Ignore entry if comment, if status of genome = no data, or if both Chromosome/Refseq and WGS fields are empty
@@ -401,11 +401,6 @@ class Accessions:
                         gen_seqs_tmp = [l[:4] for l in line[12].split(",")]
                         gen_seqs = list(set([gs for gs in gen_seqs_tmp if gs in acc_ok]))
                
-	       	if taxid == 351746:
-			print name
-			print taxid
-			print status
-			print gen_seqs
                 #If accession data not available, this entry is useless so we move on without adding it to self.accessions
                 if not gen_seqs:
                     continue
@@ -414,7 +409,7 @@ class Accessions:
                                            'status' : status,
                                            'gen_seqs' : gen_seqs }
         
-        print "doing",eukaryotes
+ #       print "doing",eukaryotes
         with open( eukaryotes ) as inpf:
             for line in (l.strip().split('\t') for l in inpf):
                 #Ignore entry if comment, if status of genome = no data, or if both Chromosome/Refseq and WGS fields are empty
@@ -453,7 +448,7 @@ class Accessions:
 	
 	#Go through entries in viruses.txt
         with open( viruses ) as inpf:
-		print "doing",viruses
+#		print "doing",viruses
                	for line in (l.strip().split('\t') for l in inpf):
                    	#Ignore line if comment, if status of genome = no data, or if status = "SRA or Traces" (means very little genome info available)
                    	if line[0][0] == '#':

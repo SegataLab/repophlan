@@ -32,7 +32,7 @@ def run( pars ):
     #fna is a dictionary with fasta accessions pointing to the genomes
     input_handle  = pars['gb']
     fna = SeqIO.index( pars['fna'], "fasta")
-
+    print fna.keys()
     #open taxonomy file. get all fields for each line. tids2accs is dictionary
     #for taxon id -> accession. if four-letter code, it's draft.
     #if not four letter code, it's final or draft. 
@@ -50,6 +50,7 @@ def run( pars ):
             accs2tids[vv] = k
     
     #
+    missed_ids = set()
     for seq_record in SeqIO.parse( op( input_handle ), "genbank") :
         for seq_record_id in [seq_record.id,seq_record.id[3:7]]:
             if seq_record_id in accs2tids:
@@ -67,7 +68,12 @@ def run( pars ):
                 gi = seq_record.annotations['gi']
                 n = 0
                 id = "|".join(["gi",gi,"ref",seq_record.id,""])
-                fna_g = fna[id]
+		try:
+			fna_g = fna[id]
+		except:
+			print id
+			missed_ids.add(id)
+
                 fna_genome.append( fna_g )
                 for seq_feature in seq_record.features :
                     if seq_feature.type == "gene" :
