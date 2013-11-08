@@ -58,6 +58,8 @@ Known issues:
   ftp.ncbi.nlm.nih.gov/genomes/GENOME_REPORTS/prokaryotes.txt
   entries with inconsistencies are skipped (with a 'try catch' policy), but few
   of these inconsistencies could actually be handled.
+* it would be great to plug in into RePoPhlAn a gene-to-function mapping (e.g.
+  KEGG, CAZY, ...)
 * need extensive testing of both the taxonomy and the retrieved files
 
 
