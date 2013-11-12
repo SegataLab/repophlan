@@ -22,7 +22,7 @@ import pickle
 import tarfile
 import urllib2
 import StringIO
-import logginr
+import logging
 
 from Bio import Phylo
 from Bio.Phylo.BaseTree import Tree as BTree
