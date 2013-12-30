@@ -7,7 +7,7 @@ $ ./generate_taxonomy.py --output taxonomy.txt --output_red taxonomy_reduced.txt
 a standard format with a fixed number of taxonomic levels.
 
 
-$ ./repophlan_get_viruses.py --taxonomy taxonomy.txt --out_dir repophlan_viruses --out_summary repophlan_viruses.txt | tee repophlan_viruses.log
+$ ./repophlan_get_viruses.py --taxonomy taxonomy_reduced.txt --out_dir repophlan_viruses --out_summary repophlan_viruses.txt | tee repophlan_viruses.log
 [ ~1 hour ]. Downloads and save all sequences available for viruses (from
 RefSeq). The files are saved in the 'repophlan_viruses' folder and the taxonomy
 of each downloaded set of files is in 'repophlan_viruses.txt'
@@ -20,6 +20,9 @@ ftp load problems are handled gracefully with a 'delay and retry' policy.
 IMPORTANT: specifying more than 20 processors to run in parallel causes serious
 problems in terms of exceeding the allowed number of connections by NCBI causing
 long delays.
+
+$ ./repophlan_get_euks.py --taxonomy taxonomy_reduced.txt --out_dir euks --nproc 15 --out_summary euks_summary.txt | tee repophlan_euks.txt
+
 
 As of Nov 8 2013, RepoPhlAn retrieves:
 * 4958 viruses (each with fna, ffn, faa files)

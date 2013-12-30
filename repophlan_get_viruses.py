@@ -105,7 +105,7 @@ if __name__ == '__main__':
     logger.info('Writing summary file to: '+par['out_summary'])
     with open( par['out_summary'], "w" ) as outf:
         for k,v in sorted(summary.items(),key=lambda y:y[0]):
-            outf.write( "\t".join( ['accession:'+k] + [kk+":"+vv for kk,vv in sorted(v.items(),key=lambda x:x[0])] ) +"\n"  )
+            outf.write( "\t".join( [k,v['taxonomy']] ) +"\n"  )
     logger.info('Done. Exiting.')
     
 

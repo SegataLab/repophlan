@@ -149,6 +149,33 @@ def draft_genome_dwl( info ):
     except Exception, e2: 
         logger.error("Something wrong in retrieving information for "+info['converted_assn']+": "+str(e2) )
 
+def draft_genome_genbank_dwl( info ):
+    seqtypes = ['fna','ffn','frn','faa']
+    try:
+        res = dict([(s,[]) for s in seqtypes]) 
+        dwl_folder = NCBI_ftp + GENBANK_draft_bacteria + info['genbank_folder']
+
+        for file_type in seqtypes:
+            try:
+                rname = dwl_folder+"/"+info['WGS'][:4]+'00000000.contig.'+file_type+'.tgz'
+                ret = get_remote_file_with_retry( add_protocol( rname ), "DRAFT", compr_seq = True   )
+            except Exception, e:
+                logger.error('Error in downloading of '+rname+' '+str(e))
+                break
+            res[file_type] += ret
+
+        for file_type in seqtypes:
+            if len(res[file_type]):
+                out_fna = info['outdir']+"/"+file_type+"/"+info['converted_assn']+"."+file_type
+                if not os.path.exists( info['outdir']+"/"+file_type+"/"):
+                    os.mkdir( info['outdir']+"/"+file_type+"/" )
+                SeqIO.write( res[file_type], out_fna, "fasta")
+            else:
+                logger.error( 'Error in downloading  '+info['WGS']+": empty "+file_type )
+
+    except Exception, e2: 
+        logger.error("Something wrong in retrieving information for "+info['converted_assn']+": "+str(e2) )
+
 
 def get_table_by_assn( remote_file, key, sep = '\t' ):
     table = urllib2.urlopen( remote_file )
@@ -169,6 +196,19 @@ def conv_ass_format( s ):
     s = s.replace('GCA','GCF')
     return s.split(".")[0]
 
+def get_assn2folder_genbank( remote_dir ):
+    ftp = FTP(NCBI_ftp)
+    ftp.login()
+    ftp.cwd( remote_dir )
+    dirs = ftp.nlst()
+
+    outd = {}
+    for d in dirs:
+        if "uid" in d:
+            acc = d.split("uid")[-1]
+            outd[acc] = d 
+    return outd 
+
 if __name__ == '__main__':
     par = read_params(sys.argv)
    
@@ -188,8 +228,8 @@ if __name__ == '__main__':
 
     for assn, info in ass_list.items():
         convass = conv_ass_format(assn)
+        ass_list[assn]['converted_assn'] = convass
         if convass in ass2folder:
-            ass_list[assn]['converted_assn'] = convass
             ass_list[assn]['dwl_folder'] = ass2folder[conv_ass_format(assn)]+"/"+convass
         if 'TaxID' in info:
             if info['TaxID'] in taxids2taxonomy:
@@ -209,7 +249,14 @@ if __name__ == '__main__':
 
     for assn, info in ass_list.items():
         if 'dwl_folder' not in info:
-            logger.warning(assn+" ("+info['Organism/Name']+" ) does not have an assembly folder, and it will not be retrieved")
+            if info['BioProject ID'] in uid2genbankfolder:
+                logger.warning(assn+" ("+info['Organism/Name']+" ) does not have an assembly folder, will try to download it from Genbank")
+                info['genbank_folder'] = uid2genbankfolder[info['BioProject ID']]
+                info['outdir'] = par['out_dir'] 
+                info['assn'] = assn
+                pool.map_async( draft_genome_genbank_dwl, [info] )
+            else:
+                logger.warning(assn+" ("+info['Organism/Name']+" ) does not have an assembly folder, and it will not be retrieved")
             continue
         if info['WGS'] == '-':
             logger.info("FINAL")
