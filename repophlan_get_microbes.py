@@ -18,6 +18,7 @@ FTP_prot = "ftp://"
 NCBI_ftp = "ftp.ncbi.nlm.nih.gov"
 NCBI_assembly_folder = '/genomes/ASSEMBLY_BACTERIA/'
 NCBI_prokaryotes_file = '/genomes/GENOME_REPORTS/prokaryotes.txt'
+GENBANK_draft_bacteria = '/genbank/genomes/Bacteria_DRAFT/'
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout, 
                     format = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
@@ -216,10 +217,13 @@ if __name__ == '__main__':
     ass_list = get_table_by_assn( add_protocol(NCBI_ftp + NCBI_prokaryotes_file), key = 'Assembly Accession' )
     logger.info('NCBI assembly list read: '+str(len(ass_list))+' assemblies')
     
+    logger.info('Downloading and reading the GENBANK draft bacterial genomes list')
+    uid2genbankfolder = get_assn2folder_genbank( GENBANK_draft_bacteria )
+    logger.info('NCBI assembly list read: '+str(len(ass_list))+' assemblies')
+    
     logger.info('Downloading and reading the NCBI microbial assembly folders')
     ass2folder = get_assn2folder( NCBI_assembly_folder )
     logger.info('NCBI assembly folder scanned: '+str(len(ass2folder))+' folders')
-
     
     logger.info('Reading the taxonomy from '+par['taxonomy']+'... ')
     with open(par['taxonomy']) as inpf:
