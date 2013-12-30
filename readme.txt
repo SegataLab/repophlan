@@ -1,18 +1,25 @@
 This is pretty much a work in progress. The pipeline currently consists of the
-following three scripts (reported with default settings):
+following scripts (reported with default settings):
 
-$ ./generate_taxonomy.py --output taxonomy.txt --output_red taxonomy_reduced.txt --pickle taxonomy.pkl | tee generate_taxonomy.log
+*** Genereate the underlying taxonomy
+$ ./generate_taxonomy.py --output taxonomy.txt --output_red taxonomy_reduced.txt /
+  --pickle taxonomy.pkl | tee generate_taxonomy.log
 
 [ ~3 hours ]. This script downloads, processes, and saves the NCBI taxonomy in 
 a standard format with a fixed number of taxonomic levels.
 
-
-$ ./repophlan_get_viruses.py --taxonomy taxonomy_reduced.txt --out_dir repophlan_viruses --out_summary repophlan_viruses.txt | tee repophlan_viruses.log
+*** Download the viral genomes (fna,ffn,faa) with corresponding taxonomy
+$ ./repophlan_get_viruses.py --taxonomy taxonomy_reduced.txt --out_dir /
+  repophlan_viruses --out_summary repophlan_viruses.txt | tee repophlan_viruses.log
 [ ~1 hour ]. Downloads and save all sequences available for viruses (from
 RefSeq). The files are saved in the 'repophlan_viruses' folder and the taxonomy
 of each downloaded set of files is in 'repophlan_viruses.txt'
 
-$ ./repophlan_get_microbes.py --taxonomy taxonomy_reduced.txt --out_dir microbes --nproc 20 --out_summary repophlan_microbes.txt | tee repophlan_microbes.log
+*** Download the microbial (bacteria+archaea) genomes (fna,ffn,faa,frn) with 
+    corresponding taxonomy
+$ ./repophlan_get_microbes.py --taxonomy taxonomy_reduced.txt --out_dir /
+  microbes --nproc 20 --out_summary repophlan_microbes.txt /
+  | tee repophlan_microbes.log
 [ ~6 hours ]. Downloads and save all available sequences for microbes. It uses
 multiple parallel connections to speed up the retrieval: common exceptions 
 including issues with the NCBI ftp which temporarily rejects connections for
@@ -21,8 +28,11 @@ IMPORTANT: specifying more than 20 processors to run in parallel causes serious
 problems in terms of exceeding the allowed number of connections by NCBI causing
 long delays.
 
-$ ./repophlan_get_euks.py --taxonomy taxonomy_reduced.txt --out_dir euks --nproc 15 --out_summary euks_summary.txt | tee repophlan_euks.txt
-
+*** Download the single-celled Eukaryotes genomes (i.e. fungi and protozoa, with 
+fna,ffn,faa) with corresponding taxonomy
+$ ./repophlan_get_euks.py --taxonomy taxonomy_reduced.txt --out_dir_fungi fungi /
+  --out_dir_protozoa protozoa --out_summary_fungi repophlan_fungi.txt /
+  --out_summary_protozoa repophlan_protozoa.txt | tee repophlan_euks.log
 
 As of Nov 8 2013, RepoPhlAn retrieves:
 * 4958 viruses (each with fna, ffn, faa files)
@@ -40,7 +50,6 @@ microbes could be retrieved.
 
 Known issues:
 
-* Eukaryotes are missing. Need to find a principled means to get them from NCBI
 * For almost all the assembly additional informative file can be automatically
   downloaded:
   - .asn (probably not useful)
@@ -53,7 +62,7 @@ Known issues:
 * about ~30 strains are missing in the generated taxonomy file. These are
   the representatives of sets of strains with multiple assemblies. It should
   be an easy fix in generate_taxonomy.py
-* for some microbes only a subset of the four types of files are present. These
+* for some microbes and euks only a subset of the four types of files are present. These
   files are downloaded but the assembly will not appear in the 
   repophlan_microbes.txt for consistency. However, for some downstream analyses
   not all the four files are actually needed.
