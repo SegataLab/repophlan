@@ -49,29 +49,42 @@ if __name__ == '__main__':
     outdir = par['out_dir']+ "/"
 
     summary = {}
+    viruses = {}
 
     nrec = 0
     for seq_record in SeqIO.parse( f, "genbank"):
         accession = seq_record.annotations['accessions'][0]
         logger.info('Processing accession '+accession)
 
-        fna = seq_record
         ffn, faa = [], []
         taxid = None
-   
+
+        bioproject = None
+        for dbxref in seq_record.dbxrefs:
+            if 'BioProject' in dbxref:
+                bioproject = dbxref.split("BioProject:")[-1]
+        if bioproject is None:
+            logger.warning('Accession '+accession+' without Bioproject, skipping it')
+            continue
+
+        if bioproject not in viruses:
+            viruses[bioproject] = {'ffn':[],'faa':[],'fna':[],'taxon':""}
+        
+        viruses[bioproject]['fna'].append( seq_record )
+
         for feat in seq_record.features:
             if feat.type == 'source':
                 if 'db_xref' in feat.qualifiers:
                     for tn in feat.qualifiers['db_xref']:
                         if 'taxon' in tn:
-                            taxid = tn.split(":")[-1]
+                            viruses[bioproject]['taxon'] = tn.split(":")[-1]
     
             if feat.type == 'gene':
                 if 'db_xref' in feat.qualifiers:
                     gene_id = feat.qualifiers['db_xref'][0]
-                    gene = feat.location.extract(fna)
+                    gene = feat.location.extract(seq_record)
                     gene.id = gene_id
-                    ffn.append( gene )
+                    viruses[bioproject]['ffn'].append( gene )
             if feat.type == 'CDS':
                 if 'translation' in feat.qualifiers:
                     prot = SeqRecord( Seq(feat.qualifiers['translation'][0])  )
@@ -79,28 +92,31 @@ if __name__ == '__main__':
                         prot.id = feat.qualifiers['protein_id'][0]
                     if 'product' in feat.qualifiers:
                         prot.description = feat.qualifiers['product'][0]
-                    faa.append( prot )
+                    viruses[bioproject]['faa'].append( prot )
+        nrec += 1
+        logger.info('Processing '+accession+' [record # '+str(nrec)+'] ')
        
+    for nrec,(k,v) in enumerate(viruses.items()):
+        taxid = v['taxon']
         if taxid is None:
+            logger.warning('No tax ID for '+accession.id+' skipping it')
             continue
         
         if taxid not in taxids2taxonomy:
             logger.info('TaxId not found in taxonomy:  '+taxid)
             continue
-
-        nrec += 1
         
-        SeqIO.write( fna, outdir+accession+".fna", "fasta" )
-        SeqIO.write( ffn, outdir+accession+".ffn", "fasta" )
-        SeqIO.write( faa, outdir+accession+".faa", "fasta" )
+        SeqIO.write( v['fna'], outdir+k+".fna", "fasta" )
+        SeqIO.write( v['ffn'], outdir+k+".ffn", "fasta" )
+        SeqIO.write( v['faa'], outdir+k+".faa", "fasta" )
   
-        summary[accession] = {  'taxonomy':taxids2taxonomy[taxid],
-                                'lfna': outdir+accession+".fna", 
-                                'lffn': outdir+accession+".ffn", 
-                                'lfaa': outdir+accession+".faa" } 
+        summary[k] = {  'taxonomy':taxids2taxonomy[taxid],
+                                'lfna': outdir+k+".fna", 
+                                'lffn': outdir+k+".ffn", 
+                                'lfaa': outdir+k+".faa" } 
         #print summary
 
-        logger.info('Files exported for '+accession+' [record # '+str(nrec)+'] '+",".join([outdir+accession+".fna",outdir+accession+".ffn",outdir+accession+".faa"]))
+        logger.info('Files exported for '+k+' [record # '+str(nrec)+'] '+",".join([outdir+k+".fna",outdir+k+".ffn",outdir+k+".faa"]))
 
     logger.info('Writing summary file to: '+par['out_summary'])
     with open( par['out_summary'], "w" ) as outf:
