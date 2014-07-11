@@ -100,6 +100,11 @@ def get_remote_file_with_retry( url, info_str = "", compr_seq = False ):
         seqs = StringIO.StringIO(loc.read())
     return seqs
 
+def is_plasmid( ppt ):
+    if 'plasmid' in ppt[0]:
+        return True
+    return False
+
 def is_contig( ppt ):
     if 'plasmid' in ppt[0]:
         return False
@@ -182,8 +187,10 @@ def assrep_entrez_dwl( info ):
         logger.error("Something wrong in retrieving information for "+info['converted_assn']+" using ENTREZ: "+str(e2) )
 def full_genome_dwl( info ):
     seqtypes = ['fna','ffn','frn','faa']
+    seqtypes_plasmids = ['fna','ffn','faa']
     try:
         res = dict([(s,[]) for s in seqtypes]) 
+        res_plasmids = dict([(s,[]) for s in seqtypes_plasmids]) 
         #dwl_folder = NCBI_ftp + NCBI_assembly_folder + info['dwl_folder']
 
         for chid,chfiles in info['chfin'].items():
@@ -196,6 +203,14 @@ def full_genome_dwl( info ):
                         logger.error('Error in downloading of '+chfiles[file_type]+' '+str(e))
                         break
                     res[file_type] += list(SeqIO.parse(ret,'fasta'))
+            elif is_plasmid( ret ):
+                for file_type in seqtypes_plasmids:
+                    try:
+                        ret = get_remote_file_with_retry( add_protocol( chfiles[file_type] ), "FINAL"  ) 
+                    except Exception, e:
+                        logger.error('Error in downloading of '+chfiles[file_type]+' '+str(e))
+                        break
+                    res_plasmids[file_type] += list(SeqIO.parse(ret,'fasta'))
 
         for file_type in seqtypes:
             if len(res[file_type]):
@@ -205,6 +220,15 @@ def full_genome_dwl( info ):
                 SeqIO.write( res[file_type], out_fna, "fasta")
             else:
                 logger.error("Empty "+file_type+" for "+info['assn_nv'] )
+        
+        for file_type in seqtypes_plasmids:
+            if len(res_plasmids[file_type]):
+                out_fna = info['outdir']+"/"+file_type+"/plasmids/"+info['assn_nv']+"."+file_type
+                if not os.path.exists( info['outdir']+"/"+file_type+"/plasmids/"):
+                    os.mkdir( info['outdir']+"/"+file_type+"/plasmids/" )
+                SeqIO.write( res_plasmids[file_type], out_fna, "fasta")
+            else:
+                logger.error("Empty plasmid "+file_type+" for "+info['assn_nv'] )
 
         """
         for chromosome in info['Chromosomes/RefSeq'].split(","):
