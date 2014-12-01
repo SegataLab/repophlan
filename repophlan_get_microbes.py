@@ -150,6 +150,7 @@ def dwl_summarize( assemblies ):
 def refseq_dwl( info ):
     try:
         fnagz = info['dwlf']+"/"+info['assembly_id']+"_"+info['asm_name'].replace(" ","_")+"_genomic.fna.gz"
+        ret = []
         try:
             ret = get_remote_file_wr( fnagz )
         except Exception, e:
