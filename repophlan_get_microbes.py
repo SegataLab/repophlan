@@ -149,7 +149,7 @@ def dwl_summarize( assemblies ):
 
 def refseq_dwl( info ):
     try:
-        fnagz = info['dwlf']+"/"+info['assembly_id']+"_"+info['asm_name'].replace(" ","_")+"_genomic.fna.gz"
+        fnagz = info['dwlf']+"/"+info['assembly_accession']+"_"+info['asm_name'].replace(" ","_")+"_genomic.fna.gz"
         ret = []
         try:
             ret = get_remote_file_wr( fnagz )
@@ -165,8 +165,9 @@ def refseq_dwl( info ):
             SeqIO.write( ret, fo, "fasta")
             fo.close()
             fnad = SeqIO.to_dict(ret)
-        
-        faagz = info['dwlf']+"/"+info['assembly_id']+"_"+info['asm_name'].replace(" ","_")+"_protein.faa.gz"
+       
+        ret = []
+        faagz = info['dwlf']+"/"+info['assembly_accession']+"_"+info['asm_name'].replace(" ","_")+"_protein.faa.gz"
         try:
             ret = get_remote_file_wr( faagz )
         except Exception, e:
@@ -184,7 +185,7 @@ def refseq_dwl( info ):
         SeqIO.write( ret, fo, "fasta")
         fo.close()
         
-        gbffgz = info['dwlf']+"/"+info['assembly_id']+"_"+info['asm_name'].replace(" ","_")+"_genomic.gbff.gz"
+        gbffgz = info['dwlf']+"/"+info['assembly_accession']+"_"+info['asm_name'].replace(" ","_")+"_genomic.gbff.gz"
         ret, ffn, frn = [], [], []
         try:
             ret = get_remote_file_wr( gbffgz, seqtype = 'genbank' )
@@ -235,7 +236,7 @@ def refseq_dwl( info ):
 
 
     except Exception, e2: 
-        logger.error("Something wrong in retrieving information for "+info['assembly_id']+": "+str(e2) )
+        logger.error("Something wrong in retrieving information for "+info['assembly_accession']+": "+str(e2) )
 
 
 
@@ -247,7 +248,7 @@ def get_assemblies( remote_file, outdir, sep = "\t" ):
     for line in table_content:
         line_d = dict(zip(table_header,line))
         if line_d['version_status'] != 'latest': continue
-        ass_id = "G"+line_d['assembly_id'].split("_")[1].split(".")[0]
+        ass_id = "G"+line_d['assembly_accession'].split("_")[1].split(".")[0]
         line_d['ass_id'] = ass_id
         line_d['fna_lname'] = outdir +"/fna/"+ass_id+".fna.bz2"
         line_d['ffn_lname'] = outdir +"/ffn/"+ass_id+".ffn.bz2"
@@ -257,12 +258,12 @@ def get_assemblies( remote_file, outdir, sep = "\t" ):
             line_d['taxonomy'] = taxids2taxonomy[line_d['taxid']]
         else:
             line_d['taxonomy'] = ""
-            logger.warning(line_d['assembly_id']+" ["+line_d['organism_name']+" "+line_d['infraspecific_name']+"] without known taxonomy!")
+            logger.warning(line_d['assembly_accession']+" ["+line_d['organism_name']+" "+line_d['infraspecific_name']+"] without known taxonomy!")
             continue
         if not line_d['taxonomy'] or line_d['taxonomy'].count("|") < 1 or line_d['taxonomy'].split('|')[1] in toescl:
-            logger.warning(line_d['assembly_id']+" ["+line_d['organism_name']+" "+line_d['infraspecific_name']+"] excluded from download because of uninteresting phyla!") 
+            logger.warning(line_d['assembly_accession']+" ["+line_d['organism_name']+" "+line_d['infraspecific_name']+"] excluded from download because of uninteresting phyla!") 
             continue
-        line_d['dwlf'] = add_protocol( NCBI_ftp + NCBI_assemblies_all + line_d['assembly_id']  + "_" + line_d['asm_name'].replace(" ","_") ) 
+        line_d['dwlf'] = add_protocol( NCBI_ftp + NCBI_assemblies_all + line_d['assembly_accession']  + "_" + line_d['asm_name'].replace(" ","_") ) 
         assemblies[ass_id] = line_d
     return assemblies
 
