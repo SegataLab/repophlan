@@ -149,7 +149,7 @@ def dwl_summarize( assemblies ):
 
 def refseq_dwl( info ):
     try:
-        fnagz = info['dwlf']+"/"+info['assembly_accession']+"_"+info['asm_name'].replace(" ","_")+"_genomic.fna.gz"
+        fnagz = info['dwlf']+"/"+info['assembly_accession']+"_"+info['asm_name'].replace(" ","_").replace("#","_")+"_genomic.fna.gz"
         ret = []
         try:
             ret = get_remote_file_wr( fnagz )
@@ -167,7 +167,7 @@ def refseq_dwl( info ):
             fnad = SeqIO.to_dict(ret)
        
         ret = []
-        faagz = info['dwlf']+"/"+info['assembly_accession']+"_"+info['asm_name'].replace(" ","_")+"_protein.faa.gz"
+        faagz = info['dwlf']+"/"+info['assembly_accession']+"_"+info['asm_name'].replace(" ","_").replace("#","_")+"_protein.faa.gz"
         try:
             ret = get_remote_file_wr( faagz )
         except Exception, e:
@@ -185,7 +185,7 @@ def refseq_dwl( info ):
         SeqIO.write( ret, fo, "fasta")
         fo.close()
         
-        gbffgz = info['dwlf']+"/"+info['assembly_accession']+"_"+info['asm_name'].replace(" ","_")+"_genomic.gbff.gz"
+        gbffgz = info['dwlf']+"/"+info['assembly_accession']+"_"+info['asm_name'].replace(" ","_").replace("#","_")+"_genomic.gbff.gz"
         ret, ffn, frn = [], [], []
         try:
             ret = get_remote_file_wr( gbffgz, seqtype = 'genbank' )
@@ -243,7 +243,8 @@ def refseq_dwl( info ):
 def get_assemblies( remote_file, outdir, sep = "\t" ):
     table = urllib2.urlopen( remote_file )
     table = [sline.strip().split(sep) for sline in table]
-    table_header, table_content = [v.replace('#','').strip().lower() for v in table[0]],table[1:]
+    #table_header, table_content = [v.replace('#','').strip().lower() for v in table[0]],table[1:]
+    table_header, table_content = [v.replace('#','').strip().lower() for v in table[1]],table[2:]
     assemblies = {}
     for line in table_content:
         line_d = dict(zip(table_header,line))
@@ -263,7 +264,7 @@ def get_assemblies( remote_file, outdir, sep = "\t" ):
         if not line_d['taxonomy'] or line_d['taxonomy'].count("|") < 1 or line_d['taxonomy'].split('|')[1] in toescl:
             logger.warning(line_d['assembly_accession']+" ["+line_d['organism_name']+" "+line_d['infraspecific_name']+"] excluded from download because of uninteresting phyla!") 
             continue
-        line_d['dwlf'] = add_protocol( NCBI_ftp + NCBI_assemblies_all + line_d['assembly_accession']  + "_" + line_d['asm_name'].replace(" ","_") ) 
+        line_d['dwlf'] = add_protocol( NCBI_ftp + NCBI_assemblies_all + line_d['assembly_accession']  + "_" + line_d['asm_name'].replace(" ","_").replace("#","_") ) 
         assemblies[ass_id] = line_d
     return assemblies
 
@@ -271,7 +272,8 @@ def get_assemblies( remote_file, outdir, sep = "\t" ):
 def get_table_by_assn( remote_file, key, sep = '\t' ):
     table = urllib2.urlopen( remote_file )
     table = [sline.strip().split(sep) for sline in table] 
-    table_header, table_content = [v.replace('#','').strip().lower() for v in table[0]],table[1:] 
+    #table_header, table_content = [v.replace('#','').strip().lower() for v in table[0]],table[1:] 
+    table_header, table_content = [v.replace('#','').strip().lower() for v in table[1]],table[2:]
     ret_table = dict([(d[key],d) for d in [dict(zip(table_header,l)) for l in table_content]
                 if key in d])
     return ret_table
