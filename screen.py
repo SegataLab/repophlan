@@ -10,6 +10,7 @@ import os
 import subprocess as sb
 import logging
 import multiprocessing as mp
+from os.path import join, dirname, realpath
 
 aa = ['Ala', 'Arg', 'Asn', 'Asp', 'Cys', 'Gln', 'Glu', 'Gly', 'His', 'Ile',
       'Leu', 'Lys', 'Met', 'Phe', 'Pro', 'Ser', 'Thr', 'Trp', 'Tyr', 'Val']
@@ -20,6 +21,7 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
 logger = logging.getLogger(sys.argv[0])
 
+pfam_file = join(dirname(realpath(__file__)), 'pfam', '102.hmm')
 
 def read_params(args):
     parser = argparse.ArgumentParser(description='')
@@ -40,7 +42,7 @@ def get_102(faa_bz2):
     f.close()
     with open(f.name, "w") as outf:
         call(["bzcat", faa_bz2], stdout=outf)
-    call(["hmmscan", "--tblout", f2.name, "-o", f3.name, "pfam/102.hmm", f.name])
+    call(["hmmscan", "--tblout", f2.name, "-o", f3.name, pfam_file, f.name])
 
     p102 = set()
     with open(f2.name) as inp:
@@ -110,8 +112,12 @@ def get_scores(info):
     info[1]['score_faa'] = get_102(lfaa) if lfaa else 0.0
     info[1]['score_trna'], info[1]['score_rrna'] = get_rna_scores(
         lfrn) if lfrn else (0.0, 0.0)
+    scores = []
     for f in ['score_fna', 'score_faa', 'score_trna', 'score_rrna']:
-        info[1][f] = str(round(info[1][f], 3))
+        score = str(round(info[1][f], 3))
+        info[1][f] = score
+        scores.append(score)
+    logger.info('  Scores: %s' % ', '.join(scores))
     return info
 
 
