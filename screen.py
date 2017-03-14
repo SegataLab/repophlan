@@ -88,7 +88,7 @@ def get_rna_scores(frn_bz2):
     with bz2.BZ2File(frn_bz2, "r") as inp:
         for s in SeqIO.parse(inp, "fasta"):
             for a in aa:
-                if "tRNA-" + a in s.id:
+                if "tRNA-" + a in s.id or "tRNA-" + a in s.description:
                     found_aa[a] += 1
             for r in rrnas:
                 if '_' + r + '_' in s.id:
@@ -108,6 +108,7 @@ def get_scores(info):
     logger.info('Processing ' + info[0])
 
     lfna, lfaa, lfrn = info[1]['fna_lname'], info[1]['faa_lname'], info[1]['frn_lname']
+
     info[1]['score_fna'] = get_fna_score(lfna) if lfna else 0.0
     info[1]['score_faa'] = get_102(lfaa) if lfaa else 0.0
     info[1]['score_trna'], info[1]['score_rrna'] = get_rna_scores(
@@ -136,7 +137,6 @@ if __name__ == '__main__':
         pool.map_async(get_scores, [(k, v)], callback=results.append)
     pool.close()
     pool.join()
-    print results
 
     for r in results:
         k, v = r[0]
