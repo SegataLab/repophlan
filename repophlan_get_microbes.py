@@ -51,6 +51,10 @@ def read_params(args):
         help="The taxonomy file")
     arg('--out_summary', required=True, type=str,
         help="The output summary file")
+    arg('--in_list', type=str,
+        help="The list of genome IDs to include")
+    arg('--ex_list', type=str,
+        help="The list of genome IDs to exclude")
     return vars(parser.parse_args())
 
 
@@ -256,7 +260,7 @@ def refseq_dwl(info):
                      info['assembly_accession'] + ": " + str(e2))
 
 
-def get_assemblies(remote_file, outdir, sep="\t"):
+def get_assemblies(remote_file, outdir, sep="\t", inset=[], exset=[]):
     table = urllib2.urlopen(remote_file)
     table = [sline.strip().split(sep) for sline in table]
     # table_header, table_content = [v.replace('#','').strip().lower() for v
@@ -269,6 +273,10 @@ def get_assemblies(remote_file, outdir, sep="\t"):
         if line_d['version_status'] != 'latest':
             continue
         ass_id = "G" + line_d['assembly_accession'].split("_")[1].split(".")[0]
+        if inset and ass_id not in inset:
+            continue
+        if exset and ass_id in exset:
+            continue
         line_d['ass_id'] = ass_id
         line_d['fna_lname'] = outdir + "/fna/" + ass_id + ".fna.bz2"
         line_d['ffn_lname'] = outdir + "/ffn/" + ass_id + ".ffn.bz2"
@@ -319,10 +327,24 @@ if __name__ == '__main__':
         taxids2taxonomy = dict([l.strip().split('\t')[1:] for l in inpf])
     logger.info('Done.')
 
+    inset=set()
+    finlist = par['in_list']
+    if finlist and os.path.isfile(finlist):
+        with open(finlist, 'r') as f:
+            inset = set(f.read().splitlines())
+        logger.info('%s pre-defined genomes will be included.' % len(inset))
+
+    exset=set()
+    fexlist = par['ex_list']
+    if fexlist and os.path.isfile(fexlist):
+        with open(fexlist, 'r') as f:
+            exset = set(f.read().splitlines())
+        logger.info('%s pre-defined genomes will be excluded.' % len(exset))
+
     refseq_assemblies = get_assemblies(add_protocol(
-        NCBI_ftp + NCBI_ASREFSEQ_file), par['out_dir'])
+        NCBI_ftp + NCBI_ASREFSEQ_file), par['out_dir'], inset=inset, exset=exset)
     genbank_assemblies = get_assemblies(add_protocol(
-        NCBI_ftp + NCBI_ASGENBANK_file), par['out_dir'])
+        NCBI_ftp + NCBI_ASGENBANK_file), par['out_dir'], inset=inset, exset=exset)
 
     if not os.path.exists(par['out_dir']):
         os.mkdir(par['out_dir'])
