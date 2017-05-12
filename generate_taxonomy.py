@@ -14,6 +14,7 @@ __version__ = '1.1.2'
 __date__ = '6 Aug 2013'
 
 import sys
+import os
 import collections
 import re
 import copy
@@ -40,7 +41,7 @@ def read_params(args):
     """
     arg('--ncbi_taxdump', type=str, required=False,
         default="ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz",
-        help="The remote NCBI taxdumpfile (default is ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz)")
+        help="The remote or local NCBI taxdump file (default is ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz)")
     arg('--output', metavar='out', required=True, default=None, type=str,
         help="The output taxonomy")
     arg('--output_red', metavar='out_red', required=True, default=None, type=str,
@@ -251,7 +252,7 @@ class Nodes:
             if not len(clade.clades) and clade.accession:
                 if clade.rank == 'species':
                     newclade = copy.deepcopy( clade )
-                    clade.accession = [] 
+                    clade.accession = []
                     clade.sequence_data = False
                     newclade.rank = "taxon"
                     clade.clades = [newclade]
@@ -357,11 +358,15 @@ if __name__ == '__main__':
     logger = logging.getLogger(sys.argv[0])
 
     logger.info(
-        'Downloading and reading the NCBI taxdump file from ' + par['ncbi_taxdump'])
+        'Downloading and/or reading the NCBI taxdump file from ' + par['ncbi_taxdump'])
     try:
-        loc = urllib2.urlopen(par['ncbi_taxdump'])
-        compressedFile = StringIO.StringIO(loc.read())
-        tarf = tarfile.open(fileobj=compressedFile)
+        tarf = None
+        if os.path.isfile(par['ncbi_taxdump']):
+            tarf = tarfile.open(par['ncbi_taxdump'])
+        else:
+            loc = urllib2.urlopen(par['ncbi_taxdump'])
+            compressedFile = StringIO.StringIO(loc.read())
+            tarf = tarfile.open(fileobj=compressedFile)
         for m in tarf.getmembers():
             if m.name == "names.dmp":
                 names_buf = (l.strip().split('\t')
@@ -375,7 +380,7 @@ if __name__ == '__main__':
         sys.exit()
 
     logger.info(
-        'names.dmp and nodes.dmp succeffully downloaded, extracted, and read')
+        'names.dmp and nodes.dmp successfully downloaded, extracted, and read')
 
     logger.info('Processing the names.dmp file to extract the taxonomic names')
     names = Names(names_buf)
