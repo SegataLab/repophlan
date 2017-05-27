@@ -262,7 +262,7 @@ def refseq_dwl(info):
 
 def get_assemblies(remote_file, outdir, sep="\t", inset=[], exset=[]):
     table = urllib2.urlopen(remote_file)
-    table = [sline.strip().split(sep) for sline in table]
+    table = [sline.strip('\r\n').split(sep) for sline in table]
     # table_header, table_content = [v.replace('#','').strip().lower() for v
     # in table[0]],table[1:]
     table_header, table_content = [
